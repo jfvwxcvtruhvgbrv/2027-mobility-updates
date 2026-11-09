@@ -1,0 +1,63 @@
+name: daily-report
+
+on:
+  schedule:
+    - cron: "37 19 * * *"   # UTC 19:37 = KST 04:37 (Actions 지연 감안, 6시 전 완료 목표)
+  workflow_dispatch:
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled]   # 심층 대기 목록만 다시 그린다
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  issues: read
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        if: github.event_name != 'issues'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python run_pipeline.py
+
+      - name: Refresh pending list only
+        if: github.event_name == 'issues'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -c "import render; render.fetch_pending(); render.build_site()"
+
+      - name: Commit archive
+        run: |
+          git config user.name "mobility-observatory-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data docs
+          git diff --cached --quiet || git commit -m "report $(TZ=Asia/Seoul date +%F) [skip ci]"
+          git push
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/deploy-pages@v4
