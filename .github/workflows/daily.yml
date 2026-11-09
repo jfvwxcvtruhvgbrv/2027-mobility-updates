@@ -34,7 +34,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python run_pipeline.py
+        run: python -u run_pipeline.py
 
       - name: Refresh pending list only
         if: github.event_name == 'issues'
