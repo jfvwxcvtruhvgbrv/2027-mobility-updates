@@ -14,7 +14,7 @@ import requests
 import config
 
 UA = "2027MobilityUpdates/1.0 (+github pages archive)"
-TIMEOUT = 20
+TIMEOUT = 15
 
 TRACKING = re.compile(r"^(utm_|fbclid|gclid|ref$|cmpid|ocid)")
 
@@ -87,20 +87,27 @@ def fetch_all(now=None):
     cutoff = now - timedelta(hours=config.LOOKBACK_HOURS)
     items, status = [], []
 
-    for region, countries in config.REGIONS.items():
-        for country, hl, gl, ceid, queries in countries:
-            for q in queries:
-                name = f"Google News {country}: {q}"
-                try:
-                    r = _get(gnews_url(q, hl, gl, ceid))
-                    got = _parse_feed(r.content, source="Google News", region=region,
-                                      country=country, kind="gnews", cutoff=cutoff)
-                    items += got
-                    status.append({"source": name, "region": region, "country": country, "ok": True, "n": len(got)})
-                except Exception as e:  # noqa: BLE001
-                    print(f"[WARN] {name}: {e}")
-                    status.append({"source": name, "region": region, "country": country, "ok": False, "n": 0, "error": str(e)[:120]})
-                time.sleep(0.5)
+    from concurrent.futures import ThreadPoolExecutor
+    jobs = [(region, country, hl, gl, ceid, q) for region, countries in config.REGIONS.items()
+            for country, hl, gl, ceid, queries in countries for q in queries]
+
+    def one(job):
+        region, country, hl, gl, ceid, q = job
+        name = f"Google News {country}: {q}"
+        try:
+            r = _get(gnews_url(q, hl, gl, ceid))
+            got = _parse_feed(r.content, source="Google News", region=region,
+                              country=country, kind="gnews", cutoff=cutoff)
+            return got, {"source": name, "region": region, "country": country, "ok": True, "n": len(got)}
+        except Exception as e:  # noqa: BLE001
+            print(f"[WARN] {name}: {e}")
+            return [], {"source": name, "region": region, "country": country, "ok": False, "n": 0, "error": str(e)[:120]}
+
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for got, st in ex.map(one, jobs):
+            items += got
+            status.append(st)
+    print(f"[INFO] Google News {len(jobs)}개 쿼리 완료")
 
     for name, url, region, country in config.DIRECT_FEEDS:
         try:
@@ -151,7 +158,7 @@ def _openalex(now, status):
     got = []
     for s in config.OPENALEX_SEARCHES:
         url = ("https://api.openalex.org/works?search=" + urllib.parse.quote(s)
-               + f"&filter=from_publication_date:{since},type:article|preprint|proceedings-article"
+               + f"&filter=from_publication_date:{since}"
                + "&per-page=25&select=id,doi,title,publication_date,authorships,primary_location,abstract_inverted_index")
         try:
             for w in _get(url).json().get("results", []):

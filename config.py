@@ -20,7 +20,7 @@ USE_MID_MODEL_FOR_OVERVIEW = True
 # ── 수집 범위 ──────────────────────────────────────────────────────────────
 LOOKBACK_HOURS = 30          # 매일 실행, 겹침 6시간(중복은 seen.json이 제거)
 MAX_PER_QUERY = 30           # Google News 쿼리당 최대 항목
-TRIAGE_BATCH = 50            # 저비용 분류 1회 호출당 제목 수
+TRIAGE_BATCH = 30            # 저비용 분류 1회 호출당 제목 수
 MAX_BRIEFS = 140             # 하루 단신 상한
 BRIEF_BATCH = 8              # 단신 1회 호출당 기사 수
 BODY_CHARS = 1500            # 단신 작성 시 기사당 본문 상한(글자)

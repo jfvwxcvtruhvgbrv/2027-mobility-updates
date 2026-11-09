@@ -25,12 +25,15 @@ class LLM:
         cache_read = getattr(u, "cache_read_input_tokens", 0) or 0
         return (u.input_tokens * p["in"] + cache_read * p["cache_read"] + u.output_tokens * p["out"]) / 1e6
 
-    def json_call(self, *, model, system, user, max_tokens, stage):
+    def json_call(self, *, model, system, user, max_tokens, stage, schema):
+        """도구 호출을 강제해 항상 유효한 JSON(schema)을 받는다."""
         if self.spent >= self.budget:
             raise BudgetExceeded(f"{self.spent:.4f} >= {self.budget}")
         msg = self.client.messages.create(
             model=model, max_tokens=max_tokens, system=system,
             messages=[{"role": "user", "content": user}],
+            tools=[{"name": "output", "description": "결과를 제출한다", "input_schema": schema}],
+            tool_choice={"type": "tool", "name": "output"},
         )
         c = self.cost(model, msg.usage)
         self.spent += c
@@ -44,8 +47,12 @@ class LLM:
         os.makedirs(os.path.dirname(self.usage_path), exist_ok=True)
         with open(self.usage_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
-        return parse_json(text)
+        if msg.stop_reason == "max_tokens":
+            print(f"[WARN] {stage}: 출력이 max_tokens에서 잘림")
+        for b in msg.content:
+            if getattr(b, "type", "") == "tool_use":
+                return b.input
+        raise ValueError(f"{stage}: tool_use 응답 없음")
 
     def summary(self):
         by = {}

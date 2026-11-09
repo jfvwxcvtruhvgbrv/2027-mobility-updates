@@ -30,7 +30,7 @@ TRIAGE_SYSTEM = f"""너는 자동차·모빌리티 디자이너와 기획자를 
   소외 시장의 현지 제품·사용 조건, 처음 보는 접근은 높게 준다.
 - ko: 한국어 제목 (원문 의미 그대로, 과장 금지)
 
-JSON 배열만 출력한다."""
+output 도구의 items로 제출한다."""
 
 BRIEF_SYSTEM = """너는 자동차·모빌리티 디자이너·기획자용 데일리 리포트의 단신 기자다. 각 항목에 대해 한국어 단신을 쓴다.
 
@@ -42,13 +42,27 @@ BRIEF_SYSTEM = """너는 자동차·모빌리티 디자이너·기획자용 데�
 - why: 디자인·기획 의사결정에 닿는 구체적 지점(예: 수납 배치, 조작계, 소재 내구성, 현지 사용 조건)을 한 문장. 텍스트로 뒷받침되지 않으면 빈 문자열.
 - 작업 과정·한계 변명("확인하지 못했다" 등)을 쓰지 않는다. 근거 수준은 basis 필드로만 표시한다.
 
-출력: JSON 배열 [{"id","title_ko","brief","why"}]"""
+output 도구의 items로 제출한다."""
 
 OVERVIEW_SYSTEM = """너는 글로벌 모빌리티 관찰 데스크의 편집장이다. 오늘 실린 단신 목록을 보고:
 - top3: 오늘 가장 눈여겨볼 3가지를 각각 한 문장(한국어). 시장·제품·연구를 섞어서, 큰 회사 편향을 피한다.
 - flows: 여러 시장·기사를 가로지르는 흐름 2~4개. 각 {"title": 내용이 드러나는 제목, "text": 2~3문장, "ids": 근거 단신 id 목록}.
   단신에 없는 사실을 만들지 않는다. 연결이 약하면 flows를 줄인다.
-JSON 객체 {"top3": [...], "flows": [...]} 만 출력한다."""
+output 도구로 제출한다."""
+
+
+S = {"type": "string"}
+TRIAGE_SCHEMA = {"type": "object", "required": ["items"], "properties": {"items": {"type": "array", "items": {
+    "type": "object", "required": ["id", "area", "score", "ko"],
+    "properties": {"id": S, "area": {"type": "string", "enum": list(config.AREAS)}, "tags": {"type": "array", "items": S},
+                   "new_topic": {"type": ["string", "null"]}, "entities": {"type": "array", "items": S},
+                   "event": S, "score": {"type": "integer"}, "ko": S}}}}}
+BRIEF_SCHEMA = {"type": "object", "required": ["items"], "properties": {"items": {"type": "array", "items": {
+    "type": "object", "required": ["id", "title_ko", "brief"],
+    "properties": {"id": S, "title_ko": S, "brief": S, "why": S}}}}}
+OVERVIEW_SCHEMA = {"type": "object", "required": ["top3", "flows"], "properties": {
+    "top3": {"type": "array", "items": S},
+    "flows": {"type": "array", "items": {"type": "object", "properties": {"title": S, "text": S, "ids": {"type": "array", "items": S}}}}}}
 
 
 def triage(llm, items):
@@ -58,7 +72,7 @@ def triage(llm, items):
         lines = [f'{it["id"]} | {it["country"]} | {it["publisher"]} | {it["title"]} | {it["snippet"][:120]}' for it in batch]
         try:
             res = llm.json_call(model=config.CHEAP_MODEL, system=TRIAGE_SYSTEM, user="\n".join(lines),
-                                max_tokens=6000, stage="triage")
+                                max_tokens=8000, stage="triage", schema=TRIAGE_SCHEMA).get("items", [])
         except BudgetExceeded:
             held += items[i:]
             break
@@ -133,7 +147,7 @@ def get_body(it):
         return it.get("snippet", ""), "abstract"
     try:
         import trafilatura
-        r = requests.get(it["url"], headers={"User-Agent": "Mozilla/5.0 2027MobilityUpdates"}, timeout=15, allow_redirects=True)
+        r = requests.get(it["url"], headers={"User-Agent": "Mozilla/5.0 2027MobilityUpdates"}, timeout=10, allow_redirects=True)
         host = urllib.parse.urlsplit(r.url).netloc
         if "news.google.com" in host or r.status_code >= 400:
             return it.get("snippet", ""), "snippet"
@@ -147,8 +161,11 @@ def get_body(it):
 
 
 def write_briefs(llm, chosen):
-    for it in chosen:
-        it["text"], it["basis"] = get_body(it)
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=16) as ex:
+        for it, (text, basis) in zip(chosen, ex.map(get_body, chosen)):
+            it["text"], it["basis"] = text, basis
+    print(f"[INFO] 본문 확보: body {sum(1 for x in chosen if x['basis']=='body')} / {len(chosen)}")
     done, held = [], []
     for i in range(0, len(chosen), config.BRIEF_BATCH):
         batch = chosen[i:i + config.BRIEF_BATCH]
@@ -157,7 +174,7 @@ def write_briefs(llm, chosen):
                    for it in batch]
         try:
             res = llm.json_call(model=config.CHEAP_MODEL, system=BRIEF_SYSTEM,
-                                user=json.dumps(payload, ensure_ascii=False), max_tokens=4000, stage="brief")
+                                user=json.dumps(payload, ensure_ascii=False), max_tokens=6000, stage="brief", schema=BRIEF_SCHEMA).get("items", [])
         except BudgetExceeded:
             held += chosen[i:]
             break
@@ -182,7 +199,7 @@ def overview(llm, briefs):
     model = config.MID_MODEL if config.USE_MID_MODEL_FOR_OVERVIEW else config.CHEAP_MODEL
     try:
         return llm.json_call(model=model, system=OVERVIEW_SYSTEM, user=json.dumps(lines, ensure_ascii=False),
-                             max_tokens=2000, stage="overview")
+                             max_tokens=3000, stage="overview", schema=OVERVIEW_SCHEMA)
     except Exception as e:  # noqa: BLE001
         print(f"[WARN] overview: {e}")
         return {"top3": [b["title_ko"] for b in briefs[:3]], "flows": []}
