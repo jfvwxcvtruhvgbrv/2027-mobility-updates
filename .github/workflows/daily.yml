@@ -29,6 +29,13 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
 
+      - name: Build map asset (once)
+        run: |
+          if [ ! -f assets/world.json ]; then
+            npm i --no-save --no-package-lock world-atlas@2 d3-geo@3 topojson-client@3
+            node tools/build_map.mjs
+          fi
+
       - name: Run pipeline
         if: github.event_name != 'issues'
         env:
@@ -46,7 +53,7 @@ jobs:
         run: |
           git config user.name "mobility-observatory-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data docs
+          git add data docs assets
           git diff --cached --quiet || git commit -m "report $(TZ=Asia/Seoul date +%F) [skip ci]"
           git push
 
