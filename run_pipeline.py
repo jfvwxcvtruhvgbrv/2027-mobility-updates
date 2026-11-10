@@ -80,7 +80,6 @@ def main():
         json.dump(seen, f)
     process.save_entities(known, briefs + not_shown)
 
-    render.fetch_pending()
     render.build_site()
     print(f"[INFO] 완료 {date}: 게재 {len(briefs)}건, 비용 ${llm.spent:.4f}")
 

@@ -1,6 +1,6 @@
-"""2027 Mobility Updates 설정.
+"""World Mobility Updates 설정.
 
-수집 범위는 '넓게'가 원칙이다. 사용자 선택(심층 대기 목록)은 이 설정이나 점수에 영향을 주지 않는다.
+수집 범위는 '넓게'가 원칙이다.
 """
 
 # ── 모델과 가격 (USD / 1M tokens) ─────────────────────────────────────────
@@ -122,6 +122,5 @@ ARXIV_QUERY = (
 OPENALEX_SEARCHES = ["automotive design", "vehicle interior", "micromobility", "automotive HMI",
                      "perceived quality automotive", "vehicle materials sustainability"]
 
-# GitHub (심층 대기 버튼용). Actions에서는 GITHUB_REPOSITORY 환경변수가 우선한다.
+# GitHub 저장소 (Pages 주소 계산용). Actions에서는 GITHUB_REPOSITORY 환경변수가 우선한다.
 DEFAULT_REPO = "jfvwxcvtruhvgbrv/2027-mobility-updates"
-PENDING_LABEL = "deep-dive"

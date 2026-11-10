@@ -9,13 +9,12 @@ import html
 import json
 import math
 import os
-import urllib.parse
 from datetime import date as _date
 
 import config
 
 E = html.escape
-TITLE = "2027 MOBILITY UPDATES"
+TITLE = "WORLD MOBILITY UPDATES"
 REGIONS = list(config.REGION_COLORS)            # 지도 7개 + 글로벌
 MAP_REGIONS = [r for r in REGIONS if r != "글로벌"]
 WEEK = "월화수목금토일"
@@ -67,11 +66,10 @@ section,.card{scroll-margin-top:60px}
 .rchip{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--ink)}
 .tag{background:var(--paper);border-radius:4px;padding:0 7px;font-size:12px;color:var(--ink);cursor:pointer}
 .badge{border:1px solid var(--rule);border-radius:4px;padding:0 6px;font-size:11.5px;font-weight:700;color:var(--ink-soft)}
-.b-new{border-color:#b3261e;color:#b3261e}.b-exp{border-color:#6250d6;color:#6250d6}
+.b-new{border-color:#b3261e;color:#b3261e;cursor:pointer}.b-exp{border-color:#6250d6;color:#6250d6}
 .card p{margin:8px 0}.why{font-size:14.5px;color:var(--ink-soft);border-left:2px solid var(--rule);padding-left:10px}
 .links{font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:auto;padding-top:8px}.links a{color:var(--ink-soft)}
 .also{font-size:12.5px;color:var(--ink-soft);margin-top:4px}.also a{color:var(--ink-soft)}
-.pend{text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:2px 10px;color:var(--ink)!important;font-weight:600}
 .empty{font-size:13px;color:var(--ink-soft)}
 .more h3{font-size:15px;color:var(--ink);margin:26px 0 4px}
 .rbox{background:var(--card);border:1px solid var(--rule);border-top:4px solid var(--rc);border-radius:10px;padding:12px 18px 6px;margin:12px 0}
@@ -80,8 +78,7 @@ section,.card{scroll-margin-top:60px}
 @media(min-width:1100px){.mlist{grid-template-columns:1fr 1fr}}
 .row{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.5;scroll-margin-top:60px;min-width:0}
 .row .t{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;font-weight:500}.row .t:hover{text-decoration:underline}
-.row .rm{order:2;flex:0 1 auto;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;color:var(--ink-soft)}.row .dd{order:3;flex:none;font-size:12px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;border:1px solid var(--rule);border-radius:5px;padding:0 6px}
-.row .dd:hover{border-color:var(--ink);color:var(--ink)}
+.row .rm{order:2;flex:0 1 auto;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;color:var(--ink-soft)}
 @media(max-width:600px){.row{flex-wrap:wrap;row-gap:0}.row .t{flex-basis:100%;white-space:normal}.row .rm{max-width:none;flex:1}}
 .kind{font-size:11.5px;font-weight:700;border:1px solid var(--rule);border-radius:4px;padding:0 5px;color:var(--ink-soft)}
 .rangebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.funnel,.dateline{max-width:none}
@@ -101,7 +98,8 @@ PAGE_JS = """<script>
 const cards=[...document.querySelectorAll('.card[data-region],.row[data-region]')];
 const q=document.getElementById('q');let sel=null;
 function apply(){const v=q?q.value.trim().toLowerCase():'';let n=0;
- cards.forEach(c=>{const ok=(!sel||c.dataset.region===sel)&&(!v||c.innerText.toLowerCase().includes(v));c.style.display=ok?'':'none';if(ok)n++});
+ const hit=c=>v==='new'?c.dataset.new==='1':c.innerText.toLowerCase().includes(v);   // 'New' 검색 = New 배지 카드만
+ cards.forEach(c=>{const ok=(!sel||c.dataset.region===sel)&&(!v||hit(c));c.style.display=ok?'':'none';if(ok)n++});
  document.querySelectorAll('section[data-area]').forEach(s=>{const vis=sel2=>[...s.querySelectorAll(sel2)].filter(c=>c.style.display!=='none').length;
   const a=vis('.card'),b=vis('.row');const cnt=s.querySelector('.cnt');if(cnt)cnt.textContent='총 '+(a+b)+'건 · 카드 '+a+' · 목록 '+b;
   const mh=s.querySelector('.more');if(mh)mh.style.display=b?'':'none';const mc=s.querySelector('.mcnt');if(mc)mc.textContent=b+'건';
@@ -116,7 +114,7 @@ function pick(r){sel=(sel===r)?null:r;if(sel)document.body.dataset.sel=sel;else 
 document.querySelectorAll('[data-pick]').forEach(b=>{b.addEventListener('click',()=>pick(b.dataset.pick));
  b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(b.dataset.pick)}})});
 if(q)q.addEventListener('input',apply);
-document.querySelectorAll('.tag').forEach(t=>t.addEventListener('click',()=>{if(q){q.value=t.textContent;apply();q.scrollIntoView({behavior:'smooth'})}}));
+document.querySelectorAll('.tag,.b-new').forEach(t=>t.addEventListener('click',()=>{if(q){q.value=t.textContent;apply();q.scrollIntoView({behavior:'smooth'})}}));
 apply();
 })();
 </script>"""
@@ -141,8 +139,7 @@ def date_label(d, hhmm=None):
 
 
 def page(title, body, root="", script=True):
-    nav = (f'<nav class="topnav"><a href="{root}index.html">오늘의 리포트</a><a href="{root}archive.html">아카이브·검색</a>'
-           f'<a href="{root}pending.html">심층 대기 목록</a></nav>')
+    nav = f'<nav class="topnav"><a href="{root}index.html">오늘의 리포트</a><a href="{root}archive.html">아카이브·검색</a></nav>'
     return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{E(title)}</title>{FONT}<style>{CSS}</style></head><body><div class="wrap">'
             f'<header><h1 class="brand"><a href="{root}index.html">{TITLE}</a></h1>{nav}</header>'
@@ -173,19 +170,7 @@ def row(it, date):
     meta = " · ".join(x for x in (country_of(it), it.get("publisher") or "", (it.get("published") or "")[5:10]) if x)
     return (f'<li class="row" id="l-{E(it["id"])}" data-region="{E(reg)}" style="--rc:{config.REGION_COLORS[reg]}">'
             f'<a class="t" href="{E(it["url"])}" target="_blank" rel="noopener" title="{E(item_title(it))}">{E(item_title(it))}</a>'
-            f'<a class="dd" href="{E(issue_link(it, date))}" target="_blank" rel="noopener" title="심층 대기에 추가">＋심층</a>'
             f'<span class="rm" title="{E(meta)}">{E(meta)}</span></li>')
-
-
-def issue_link(it, date):
-    body = (f"id: {it['id']}\n리포트: {date}\n원문: {it.get('resolved_url') or it['url']}\n"
-            f"국가: {country_of(it)} / 매체: {it.get('publisher') or ''}\n분야: {config.AREAS.get(it.get('area'), it.get('area') or '')}\n\n"
-            f"단신:\n{it.get('brief') or '(목록 항목 — 단신 없음)'}\n\n심층 조사에서 보고 싶은 점(선택):\n")
-    q = urllib.parse.urlencode({"labels": config.PENDING_LABEL, "title": f"[심층] {item_title(it)}", "body": body})
-    return f"https://github.com/{repo()}/issues/new?{q}"
-
-
-BASIS = {"body": "본문 기반", "snippet": "헤드라인·요약 기반", "abstract": "초록 기반"}
 
 
 def card(it, date):
@@ -193,11 +178,11 @@ def card(it, date):
     col = config.REGION_COLORS[reg]
     badges = []
     if it.get("novel"):
-        label = "처음 보는 것" + (": " + ", ".join(it.get("novel_entities", [])[:2]) if it.get("novel_entities") else "")
-        badges.append(f'<span class="badge b-new">{E(label)}</span>')
+        why_new = ", ".join(it.get("novel_entities") or []) or it.get("new_topic") or ""
+        tip = f"아카이브에 처음 등장: {why_new}" if why_new else "아카이브에 처음 등장"
+        badges.append(f'<span class="badge b-new" title="{E(tip)}">New</span>')
     if it.get("exploration"):
         badges.append('<span class="badge b-exp">탐색 표본</span>')
-    badges.append(f'<span class="badge">{BASIS.get(it.get("basis"), "")}</span>')
     tags = "".join(f'<span class="tag">{E(t)}</span>' for t in (it.get("tags") or []))
     if it.get("new_topic"):
         tags += f'<span class="tag">새 주제: {E(it["new_topic"])}</span>'
@@ -209,12 +194,12 @@ def card(it, date):
     authors = f' · {E(it["authors"])}' if it.get("authors") else ""
     cty = country_of(it)
     cty_s = f" · {E(cty)}" if cty and cty != reg else ""
-    return (f'<article class="card" id="i-{it["id"]}" data-region="{E(reg)}" style="--rc:{col}"><h4>{E(it["title_ko"])}</h4>'
+    return (f'<article class="card" id="i-{it["id"]}" data-region="{E(reg)}" data-new="{1 if it.get("novel") else 0}" style="--rc:{col}"><h4>{E(it["title_ko"])}</h4>'
             f'<div class="meta"><span class="rchip"><span class="sw" style="background:{col}"></span>{E(reg)}</span>{cty_s} · {E(it["publisher"])}{authors} · '
             f'{E((it.get("published") or "")[:10])} {"".join(badges)}</div>'
             f'<p>{E(it["brief"])}</p>{why}<div class="meta">{tags}</div>'
             f'<div class="links"><a href="{E(it.get("resolved_url") or it["url"])}" target="_blank" rel="noopener">원문: {E(it["title"][:90])}</a>'
-            f'<a class="pend" href="{E(issue_link(it, date))}" target="_blank" rel="noopener">＋ 심층 대기에 추가</a></div>{also}</article>')
+            f'</div>{also}</article>')
 
 
 # ── 지도 ────────────────────────────────────────────────────────────────
@@ -291,9 +276,9 @@ def report_body(rep, root=""):
     out.append(f'<div class="hero">{map_block(allitems, root)}<div class="side"><div class="box"><h4>오늘의 3가지</h4><ol>'
                + "".join(f"<li>{E(t)}</li>" for t in ov.get("top3", []))
                + f'</ol></div><div class="box"><h4>흐름</h4>{flows_html}</div></div></div>')
-    secs = [(k, v) for k, v in config.AREAS.items()] + [("novel", "처음 보는 것"), ("gaps", "범위·운영")]
+    secs = [(k, v) for k, v in config.AREAS.items()] + [("gaps", "범위·운영")]
     out.append('<nav class="sec">' + "".join(f'<a href="#s-{k}">{E(v)}</a>' for k, v in secs) + "</nav>")
-    out.append('<input id="q" class="filter" placeholder="오늘 리포트 안에서 검색 — 카드와 더 많은 뉴스 목록 모두 (국가, 회사, 태그…)">')
+    out.append('<input id="q" class="filter" placeholder="오늘 리포트 안에서 검색 — 카드와 더 많은 뉴스 목록 모두 (국가, 회사, 태그… · New = 처음 등장한 것만)">')
     for key, label in config.AREAS.items():
         group = [it for it in items if it["area"] == key]
         more = sorted((x for x in listed if x["area"] == key), key=lambda x: (REGIONS.index(region_of(x)), -(x.get("score") or 0)))
@@ -313,17 +298,15 @@ def report_body(rep, root=""):
                                  f'<ul class="mlist">{"".join(row(x, date) for x in rr)}</ul></div>')
             out.append(f'<div class="more"><h3>더 많은 뉴스 <span class="ops mcnt">{len(more)}건</span></h3>{"".join(boxes)}</div>')
         out.append("</section>")
-    novel = [it for it in items if it.get("novel")]
-    out.append(f'<section id="s-novel"><h2>처음 보는 것 <span class="ops">{len(novel)}건</span></h2>'
-               '<p class="ops">아카이브에 처음 등장한 제품·회사·소재·주제입니다. 위 분야별 목록에도 함께 실려 있습니다.</p>'
-               + ("".join(f'<div><a href="#i-{it["id"]}">{E(it["title_ko"])}</a> <span class="ops">({E(region_of(it))} · '
-                          f'{E(", ".join(it.get("novel_entities", []) or [it.get("new_topic") or ""]))})</span></div>' for it in novel)
-                  or '<p class="ops">기준 기록이 쌓이는 중입니다.</p>') + "</section>")
     fails = [x for x in rep["sources"] if not x["ok"]]
     zero = [x for x in rep["sources"] if x["ok"] and x["n"] == 0]
     out.append('<section id="s-gaps"><h2>범위·운영</h2><p class="ops">권역×분야별 사건 수(카드+목록). 0은 조사한 출처 범위 안에서 오늘 해당 자료가 없었다는 뜻입니다.</p>'
                + coverage_table(allitems))
     out.append(f'<p class="ops">출처 {len(rep["sources"])}개 중 접근 실패 {len(fails)}개, 결과 0건 {len(zero)}개.</p>')
+    nb, na = sum(1 for x in items if x.get("basis") == "body"), sum(1 for x in items if x.get("basis") == "abstract")
+    out.append(f'<p class="ops">카드 요약은 대부분 기사 제목·발췌 기준입니다 (본문 확보 {nb}/{len(items)}건'
+               + (f", 논문 초록 {na}건" if na else "") + ').</p>'
+               '<p class="ops"><span class="badge b-new">New</span> = 아카이브에 처음 등장한 제품·회사·소재·주제. 배지에 마우스를 올리면 무엇이 새로운지 보이고, 누르면 New 카드만 걸러집니다.</p>')
     if fails:
         out.append("<details><summary>접근 실패 출처</summary><ul class='ops'>" + "".join(f"<li>{E(x['source'])}: {E(x.get('error', ''))}</li>" for x in fails) + "</ul></details>")
     if zero:
@@ -415,36 +398,6 @@ q.addEventListener('input',run);rg.addEventListener('change',run);
            '<span class="ops" id="rstat"></span></div>')
     write("docs/archive.html", page(f"{TITLE} — 아카이브", f'<h2>아카이브·검색</h2>{rng}<input id="aq" class="filter" placeholder="검색어 (2글자 이상: 국가, 권역, 회사, 매체, 태그…) — 카드와 목록 모두">'
                                    f'<div id="ares"></div><h2>지난 리포트</h2><ul class="arch">{lst}</ul>{js}', script=False))
-
-    # 심층 대기 목록 (GitHub Issues, label=deep-dive)
-    pend = []
-    if os.path.exists("data/pending.json"):
-        with open("data/pending.json", encoding="utf-8") as f:
-            pend = json.load(f)
-    rows = "".join(f'<div class="card"><h4><a href="{E(p["html_url"])}" target="_blank" rel="noopener">{E(p["title"])}</a></h4>'
-                   f'<div class="meta">추가 {E(p["created_at"][:10])} · #{p["number"]}</div></div>' for p in pend)
-    write("docs/pending.html", page(f"{TITLE} — 심층 대기 목록",
-          f'<h2>심층 대기 목록 <span class="ops">{len(pend)}건</span></h2>'
-          f'<p class="ops">리포트의 "＋ 심층 대기에 추가"로 만든 GitHub 이슈 목록입니다. 이 목록은 수집 범위나 점수에 영향을 주지 않습니다. '
-          f'심층 조사가 끝난 이슈를 닫으면 목록에서 빠집니다. <a href="https://github.com/{repo()}/issues?q=is%3Aopen+label%3A{config.PENDING_LABEL}" target="_blank">GitHub에서 보기</a></p>'
-          + (rows or '<p class="ops">대기 중인 항목이 없습니다.</p>'), script=False))
-
-
-def fetch_pending():
-    """Actions에서 GITHUB_TOKEN으로 열린 deep-dive 이슈를 읽어 data/pending.json에 저장."""
-    import requests
-    tok = os.environ.get("GITHUB_TOKEN")
-    if not tok:
-        return
-    try:
-        r = requests.get(f"https://api.github.com/repos/{repo()}/issues",
-                         params={"labels": config.PENDING_LABEL, "state": "open", "per_page": 100},
-                         headers={"Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json"}, timeout=20)
-        r.raise_for_status()
-        keep = [{k: i[k] for k in ("number", "title", "html_url", "created_at", "body")} for i in r.json() if "pull_request" not in i]
-        write("data/pending.json", json.dumps(keep, ensure_ascii=False, indent=1))
-    except Exception as e:  # noqa: BLE001
-        print(f"[WARN] pending issues: {e}")
 
 
 if __name__ == "__main__":
