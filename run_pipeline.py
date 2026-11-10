@@ -30,6 +30,9 @@ def main():
     now = datetime.now(timezone.utc)
     date = now.astimezone(KST).date().isoformat()
     os.makedirs("data/reports", exist_ok=True)
+    if os.environ.get("SKIP_IF_EXISTS") and os.path.exists(f"data/reports/{date}.json"):
+        print(f"[INFO] {date} 리포트가 이미 있어 이번 예약 실행은 건너뜁니다")
+        sys.exit(0)
 
     items, sources = fetch.fetch_all(now)
     seen = load_seen()
