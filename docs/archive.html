@@ -65,4 +65,4 @@ const A={car:'자동차',mobility:'모빌리티',research:'리서치',event:'이
 q.addEventListener('input',()=>{const v=q.value.trim().toLowerCase();if(v.length<2){o.innerHTML='';return}
 const hit=ix.filter(x=>(x.t+' '+x.b+' '+x.c+' '+x.r+' '+x.tg.join(' ')).toLowerCase().includes(v)).slice(0,200);
 o.innerHTML='<p class=ops>'+hit.length+'건</p>'+hit.map(x=>`<div class=card style="--rc:${RC[x.r]||'#4B515C'}"><h4><a href="reports/${x.d}.html#i-${x.id}">${esc(x.t)}</a></h4><div class=meta>${x.d} · ${esc(x.r)} · ${esc(x.c)} · ${A[x.a]||x.a}</div><p>${esc(x.b)}…</p></div>`).join('')})});
-</script><footer>모든 단신은 원문을 재구성한 요약이며 원문 링크를 함께 제공합니다. 투자 판단의 근거가 아닙니다. 지도: Natural Earth(퍼블릭 도메인), Equal Earth 투영.</footer></div></body></html>
+</script></div></body></html>
