@@ -29,12 +29,16 @@ class LLM:
         """도구 호출을 강제해 항상 유효한 JSON(schema)을 받는다."""
         if self.spent >= self.budget:
             raise BudgetExceeded(f"{self.spent:.4f} >= {self.budget}")
-        msg = self.client.messages.create(
-            model=model, max_tokens=max_tokens, system=system,
-            messages=[{"role": "user", "content": user}],
-            tools=[{"name": "output", "description": "결과를 제출한다", "input_schema": schema}],
-            tool_choice={"type": "tool", "name": "output"},
-        )
+        kw = dict(model=model, max_tokens=max_tokens, system=system,
+                  messages=[{"role": "user", "content": user}],
+                  tools=[{"name": "output", "description": "결과를 제출한다", "input_schema": schema}])
+        try:
+            msg = self.client.messages.create(**kw, tool_choice={"type": "tool", "name": "output"})
+        except Exception as e:  # 일부 모델은 강제 tool_choice 미지원 → auto + 지시로 재시도
+            if "tool_choice" not in str(e):
+                raise
+            kw["system"] = system + "\n\n반드시 output 도구를 호출해 결과를 제출한다. 다른 텍스트는 쓰지 않는다."
+            msg = self.client.messages.create(**kw, tool_choice={"type": "auto"})
         c = self.cost(model, msg.usage)
         self.spent += c
         rec = {

@@ -29,6 +29,10 @@ TRIAGE_SYSTEM = f"""너는 자동차·모빌리티 디자이너와 기획자를 
 - score: 1~5. 디자인·기획 실무자에게 새 정보인 정도. 회사 규모·영어 여부·유명세로 점수를 올리지 마라.
   소외 시장의 현지 제품·사용 조건, 처음 보는 접근은 높게 준다.
 - ko: 한국어 제목 (원문 의미 그대로, 과장 금지)
+- story_country: 기사가 다루는 나라(한국어 이름, 예: 중국, 인도네시아). 수집 경로(입력의 국가 칸)가 아니라 기사 내용 기준.
+  여러 나라·국제 행사·논문처럼 특정 국가가 없으면 "글로벌"
+- story_region: story_country가 속한 권역. 북미(미국·캐나다·멕시코) / 유럽(러시아 포함) / 동아시아(중·일·한·대만·몽골) /
+  남아시아 / 동남아시아 / 서남아시아(튀르키예·중동·이란) / 아프리카 / 글로벌. 중남미·오세아니아 등 그 밖이면 "글로벌"
 
 output 도구의 items로 제출한다."""
 
@@ -40,7 +44,9 @@ BRIEF_SYSTEM = """너는 자동차·모빌리티 디자이너·기획자용 데�
 - 주어진 텍스트에 있는 사실만 쓴다. 숫자·가격·사양은 단위·시장·조건과 함께. 추측·과장·투자 권유 금지.
 - 원문 문장을 옮겨 적지 말고 재구성한다. 인용은 꼭 필요할 때 짧게 한 번만.
 - why: 디자인·기획 의사결정에 닿는 구체적 지점(예: 수납 배치, 조작계, 소재 내구성, 현지 사용 조건)을 한 문장. 텍스트로 뒷받침되지 않으면 빈 문자열.
-- 작업 과정·한계 변명("확인하지 못했다" 등)을 쓰지 않는다. 근거 수준은 basis 필드로만 표시한다.
+- 텍스트에 없는 내용은 언급하지 말고 그냥 쓰지 않는다. "본문에 포함되지 않았다", "제목 수준", "확인되지 않았다",
+  "구체적 내용은 전해지지 않았다" 같은 자료 한계·작업 과정 문장을 절대 쓰지 않는다. 근거 수준은 화면에 따로 표시된다.
+  텍스트가 짧으면 1~2문장으로 짧게 끝낸다.
 
 output 도구의 items로 제출한다."""
 
@@ -56,7 +62,8 @@ TRIAGE_SCHEMA = {"type": "object", "required": ["items"], "properties": {"items"
     "type": "object", "required": ["id", "area", "score", "ko"],
     "properties": {"id": S, "area": {"type": "string", "enum": list(config.AREAS)}, "tags": {"type": "array", "items": S},
                    "new_topic": {"type": ["string", "null"]}, "entities": {"type": "array", "items": S},
-                   "event": S, "score": {"type": "integer"}, "ko": S}}}}}
+                   "event": S, "score": {"type": "integer"}, "ko": S, "story_country": S,
+                   "story_region": {"type": "string", "enum": list(config.REGION_COLORS)}}}}}}
 BRIEF_SCHEMA = {"type": "object", "required": ["items"], "properties": {"items": {"type": "array", "items": {
     "type": "object", "required": ["id", "title_ko", "brief"],
     "properties": {"id": S, "title_ko": S, "brief": S, "why": S}}}}}
@@ -91,7 +98,9 @@ def select(items, tri, known_entities, seed):
         t = tri.get(it["id"])
         if not t:
             continue
-        it.update({k: t.get(k) for k in ("area", "tags", "new_topic", "entities", "event", "score", "ko")})
+        it.update({k: t.get(k) for k in ("area", "tags", "new_topic", "entities", "event", "score", "ko", "story_country", "story_region")})
+        if it.get("story_region") not in config.REGION_COLORS:
+            it["story_region"] = it["region"] if it["region"] in config.REGION_COLORS else "글로벌"
         if it["area"] not in config.AREAS:
             it["area"] = "research" if it["kind"] == "paper" else "car"
         ents = [e for e in (it.get("entities") or []) if isinstance(e, str)]
@@ -110,7 +119,7 @@ def select(items, tri, known_entities, seed):
         g.sort(key=lambda x: (x["kind"] != "rss", -x["rank"]))
         rep = g[0]
         rep["also"] = [{"publisher": o["publisher"], "url": o["url"], "country": o["country"]} for o in g[1:]][:8]
-        rep["countries"] = sorted({o["country"] for o in g})
+        rep["countries"] = sorted({o.get("story_country") or o["country"] for o in g})
         reps.append(rep)
 
     reps.sort(key=lambda x: -x["rank"])
@@ -121,7 +130,7 @@ def select(items, tri, known_entities, seed):
             chosen.append(it)
             ids.add(it["id"])
 
-    for key, minimum in (("region", config.MIN_PER_REGION), ("area", config.MIN_PER_AREA)):
+    for key, minimum in (("story_region", config.MIN_PER_REGION), ("area", config.MIN_PER_AREA)):
         by = defaultdict(list)
         for it in reps:
             by[it[key]].append(it)
@@ -169,7 +178,7 @@ def write_briefs(llm, chosen):
     done, held = [], []
     for i in range(0, len(chosen), config.BRIEF_BATCH):
         batch = chosen[i:i + config.BRIEF_BATCH]
-        payload = [{"id": it["id"], "country": it["country"], "publisher": it["publisher"], "published": it["published"],
+        payload = [{"id": it["id"], "country": it.get("story_country") or it["country"], "publisher": it["publisher"], "published": it["published"],
                     "title": it["title"], "authors": it.get("authors", ""), "basis": it["basis"], "text": it["text"]}
                    for it in batch]
         try:
@@ -194,7 +203,7 @@ def write_briefs(llm, chosen):
 
 
 def overview(llm, briefs):
-    lines = [{"id": b["id"], "area": b["area"], "country": b["country"], "title": b["title_ko"], "brief": b["brief"][:220]}
+    lines = [{"id": b["id"], "area": b["area"], "country": b.get("story_country") or b["country"], "title": b["title_ko"], "brief": b["brief"][:220]}
              for b in briefs]
     model = config.MID_MODEL if config.USE_MID_MODEL_FOR_OVERVIEW else config.CHEAP_MODEL
     try:
