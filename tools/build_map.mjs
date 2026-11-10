@@ -1,0 +1,32 @@
+import fs from "fs";
+const OUT = "assets/world.json"; fs.mkdirSync("assets", { recursive: true });
+import { geoEqualEarth, geoPath, geoCentroid } from "d3-geo";
+import * as tj from "topojson-client";
+const t = JSON.parse(fs.readFileSync("node_modules/world-atlas/countries-110m.json"));
+const feats = tj.feature(t, t.objects.countries).features.filter(f => f.properties.name !== "Antarctica");
+const W = 1000, H = 520;
+const proj = geoEqualEarth().fitExtent([[8, 8], [W - 8, H - 8]], { type: "FeatureCollection", features: feats });
+const path = geoPath(proj).digits(1);
+const L = s => new Set(s.split("|"));
+const NA = L("United States of America|Canada|Mexico");
+const EA = L("China|Japan|South Korea|North Korea|Mongolia|Taiwan");
+const SA = L("India|Pakistan|Bangladesh|Sri Lanka|Nepal|Bhutan|Afghanistan");
+const SEA = L("Indonesia|Thailand|Vietnam|Malaysia|Philippines|Myanmar|Cambodia|Laos|Brunei|Timor-Leste");
+const SW = L("Turkey|United Arab Emirates|Saudi Arabia|Iran|Iraq|Israel|Jordan|Syria|Lebanon|Kuwait|Qatar|Oman|Yemen|Palestine|Cyprus|N. Cyprus");
+const EU_EXTRA = L("Russia|Iceland|Greenland");
+function region(f) {
+  const n = f.properties.name;
+  if (NA.has(n)) return "북미"; if (EA.has(n)) return "동아시아"; if (SA.has(n)) return "남아시아";
+  if (SEA.has(n)) return "동남아시아"; if (SW.has(n)) return "서남아시아"; if (EU_EXTRA.has(n)) return n === "Greenland" ? "" : "유럽";
+  const [lon, lat] = geoCentroid(f);
+  if (lat > -36 && lat < 38 && lon > -26 && lon < 53) return "아프리카";
+  if (lat >= 35 && lon > -30 && lon < 45) return "유럽";
+  return "";
+}
+const countries = feats.map(f => ({ n: f.properties.name, r: region(f), d: path(f) }));
+const anchors = { "북미": [-100, 42], "유럽": [12, 50], "아프리카": [20, 3], "서남아시아": [46, 27], "남아시아": [78, 22], "동아시아": [112, 37], "동남아시아": [110, 4] };
+const A = Object.fromEntries(Object.entries(anchors).map(([k, v]) => [k, proj(v).map(x => Math.round(x))]));
+const graticule = path({ type: "Sphere" });
+fs.writeFileSync(OUT, JSON.stringify({ W, H, sphere: graticule, anchors: A, countries }));
+const by = {}; countries.forEach(c => by[c.r || "(none)"] = (by[c.r || "(none)"] || 0) + 1);
+console.log(by, (fs.statSync(OUT).size / 1024).toFixed(0) + "KB");
