@@ -60,7 +60,7 @@ def main():
         "date": date, "generated_kst": now.astimezone(KST).strftime("%H:%M"),
         "stats": {"candidates": len(fresh), "relevant": relevant, "events": events},
         "overview": ov, "items": briefs, "sources": sources,
-        "not_shown": [{k: x.get(k) for k in ("id", "title", "ko", "url", "country", "story_country", "area")} for x in not_shown],
+        "not_shown": [{k: x.get(k) for k in ("id", "title", "ko", "url", "country", "story_country", "region", "story_region", "area", "publisher", "published", "tags", "score")} for x in not_shown],
         "held": len(held), "usage": llm.summary(),
     }
     with open(f"data/reports/{date}.json", "w", encoding="utf-8") as f:

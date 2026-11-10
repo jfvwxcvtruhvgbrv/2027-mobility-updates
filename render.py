@@ -72,7 +72,15 @@ section,.card{scroll-margin-top:60px}
 .links{font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:auto;padding-top:8px}.links a{color:var(--ink-soft)}
 .also{font-size:12.5px;color:var(--ink-soft);margin-top:4px}.also a{color:var(--ink-soft)}
 .pend{text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:2px 10px;color:var(--ink)!important;font-weight:600}
-.empty{font-size:13px;color:var(--ink-soft)}.funnel,.dateline{max-width:none}
+.empty{font-size:13px;color:var(--ink-soft)}
+.more h3{font-size:15px;color:var(--ink);margin:26px 0 4px}
+.mlist{list-style:none;padding:0;margin:6px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));column-gap:24px}
+.row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;column-gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.45;scroll-margin-top:60px}
+.row .sw{background:var(--rc);transform:translateY(-1px)}.row .t{text-decoration:none;font-weight:500}.row .t:hover{text-decoration:underline}
+.row .rm{grid-column:2;font-size:12.5px;color:var(--ink-soft)}.row .dd{grid-column:3;grid-row:1/3;font-size:12px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;border:1px solid var(--rule);border-radius:5px;padding:0 6px}
+.row .dd:hover{border-color:var(--ink);color:var(--ink)}
+.kind{font-size:11.5px;font-weight:700;border:1px solid var(--rule);border-radius:4px;padding:0 5px;color:var(--ink-soft)}
+.rangebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.funnel,.dateline{max-width:none}
 table.cov{border-collapse:collapse;font-size:13px;width:100%;background:var(--card)}table.cov td,table.cov th{border:1px solid var(--rule);padding:5px 8px;text-align:center}
 table.cov td.zero{color:#b3261e;font-weight:700}table.cov th:first-child,table.cov td:first-child{text-align:left}
 details summary{cursor:pointer;font-size:13px;color:var(--ink-soft)}
@@ -86,12 +94,14 @@ footer{margin-top:60px;font-size:12.5px;color:var(--ink-soft);border-top:1px sol
 
 PAGE_JS = """<script>
 (function(){
-const cards=[...document.querySelectorAll('.card[data-region]')];
+const cards=[...document.querySelectorAll('.card[data-region],.row[data-region]')];
 const q=document.getElementById('q');let sel=null;
 function apply(){const v=q?q.value.trim().toLowerCase():'';let n=0;
  cards.forEach(c=>{const ok=(!sel||c.dataset.region===sel)&&(!v||c.innerText.toLowerCase().includes(v));c.style.display=ok?'':'none';if(ok)n++});
- document.querySelectorAll('section[data-area]').forEach(s=>{const k=[...s.querySelectorAll('.card')].filter(c=>c.style.display!=='none').length;
-  const cnt=s.querySelector('.cnt');if(cnt)cnt.textContent=k+'건';const em=s.querySelector('.empty');if(em)em.style.display=k?'none':''});
+ document.querySelectorAll('section[data-area]').forEach(s=>{const vis=sel2=>[...s.querySelectorAll(sel2)].filter(c=>c.style.display!=='none').length;
+  const a=vis('.card'),b=vis('.row');const cnt=s.querySelector('.cnt');if(cnt)cnt.textContent='총 '+(a+b)+'건 · 카드 '+a+' · 목록 '+b;
+  const mh=s.querySelector('.more');if(mh)mh.style.display=b?'':'none';const mc=s.querySelector('.mcnt');if(mc)mc.textContent=b+'건';
+  const em=s.querySelector('.empty');if(em)em.style.display=(a+b)?'none':''});
  document.querySelectorAll('h3[data-region]').forEach(h=>{let el=h.nextElementSibling,k=0;while(el&&el.classList.contains('card')){if(el.style.display!=='none')k++;el=el.nextElementSibling}h.style.display=k?'':'none'});
  const info=document.getElementById('selinfo');if(info)info.innerHTML=sel?('선택: <b>'+sel+'</b> '+n+'건 · <a href="#" id="clr">전체 보기</a>'):'지도의 원이나 아래 권역을 누르면 해당 지역 기사만 봅니다.';
  const clr=document.getElementById('clr');if(clr)clr.onclick=e=>{e.preventDefault();pick(null)};
@@ -135,20 +145,38 @@ def page(title, body, root="", script=True):
 
 
 # ── 항목 정보 ────────────────────────────────────────────────────────────
+COUNTRY_REGION = {c[0]: r for r, cs in config.REGIONS.items() for c in cs}
+
+
 def region_of(it):
-    r = it.get("story_region")
-    return r if r in config.REGION_COLORS else (it.get("region") if it.get("region") in config.REGION_COLORS else "글로벌")
+    for r in (it.get("story_region"), it.get("region")):
+        if r in config.REGION_COLORS:
+            return r
+    return COUNTRY_REGION.get(it.get("country") or "", "글로벌")
 
 
 def country_of(it):
     return it.get("story_country") or it.get("country") or ""
 
 
+def item_title(it):
+    return it.get("title_ko") or it.get("ko") or it.get("title") or ""
+
+
+def row(it, date):
+    reg = region_of(it)
+    meta = " · ".join(x for x in (country_of(it), it.get("publisher") or "", (it.get("published") or "")[:10]) if x)
+    return (f'<li class="row" id="l-{E(it["id"])}" data-region="{E(reg)}" style="--rc:{config.REGION_COLORS[reg]}">'
+            f'<span class="sw"></span><a class="t" href="{E(it["url"])}" target="_blank" rel="noopener">{E(item_title(it))}</a>'
+            f'<a class="dd" href="{E(issue_link(it, date))}" target="_blank" rel="noopener" title="심층 대기에 추가">＋심층</a>'
+            f'<span class="rm">{E(reg)} · {E(meta)}</span></li>')
+
+
 def issue_link(it, date):
     body = (f"id: {it['id']}\n리포트: {date}\n원문: {it.get('resolved_url') or it['url']}\n"
-            f"국가: {country_of(it)} / 매체: {it['publisher']}\n분야: {config.AREAS.get(it['area'], it['area'])}\n\n"
-            f"단신:\n{it['brief']}\n\n심층 조사에서 보고 싶은 점(선택):\n")
-    q = urllib.parse.urlencode({"labels": config.PENDING_LABEL, "title": f"[심층] {it['title_ko']}", "body": body})
+            f"국가: {country_of(it)} / 매체: {it.get('publisher') or ''}\n분야: {config.AREAS.get(it.get('area'), it.get('area') or '')}\n\n"
+            f"단신:\n{it.get('brief') or '(목록 항목 — 단신 없음)'}\n\n심층 조사에서 보고 싶은 점(선택):\n")
+    q = urllib.parse.urlencode({"labels": config.PENDING_LABEL, "title": f"[심층] {item_title(it)}", "body": body})
     return f"https://github.com/{repo()}/issues/new?{q}"
 
 
@@ -223,10 +251,10 @@ def map_block(items, root):
                      f'<text class="lab" text-anchor="middle" y="{rad + 17:.0f}">{E(r)}</text></g>')
     chips = "".join(f'<button class="chip" data-pick="{E(r)}"><span class="sw" style="background:{config.REGION_COLORS[r]}"></span>{E(r)} {cnt[r]}</button>'
                     for r in REGIONS)
-    return (f'<div class="mapcard"><div class="map"><img src="{root}assets/world.svg" alt="권역별로 색을 칠한 세계지도. 원의 크기는 오늘 게재된 기사 수"> '
+    return (f'<div class="mapcard"><div class="map"><img src="{root}assets/world.svg" alt="권역별로 색을 칠한 세계지도. 원의 크기는 오늘 분류된 사건 수"> '
             f'<svg class="overlay" viewBox="0 0 {w["W"]} {w["H"]}">{"".join(bubs)}</svg></div>'
             f'<div class="chips">{chips}</div><div class="selinfo" id="selinfo"></div>'
-            f'<div class="ops" style="margin:2px">원 크기 = 오늘 게재 수 · 점선 원 = 오늘 0건 · 회색 국가 = 아직 관찰 범위 밖 · 글로벌 = 논문·국제 행사 등 특정 국가 없는 자료</div></div>')
+            f'<div class="ops" style="margin:2px">원 크기 = 오늘 수집·분류된 사건 수(카드+목록) · 점선 원 = 오늘 0건 · 회색 국가 = 아직 관찰 범위 밖 · 글로벌 = 논문·국제 행사 등 특정 국가 없는 자료</div></div>')
 
 
 def coverage_table(items):
@@ -243,9 +271,11 @@ def coverage_table(items):
 # ── 리포트 본문 ──────────────────────────────────────────────────────────
 def report_body(rep, root=""):
     date, items = rep["date"], rep["items"]
+    listed = [x for x in rep.get("not_shown", []) if x.get("area") in config.AREAS]
+    allitems = items + listed
     s = rep["stats"]
     out = [f'<div class="dateline">{E(date_label(date, rep.get("generated_kst")))}</div>'
-           f'<div class="funnel">후보 {s["candidates"]}건 → 관련 {s["relevant"]}건 → 사건 {s["events"]}건 → 게재 {len(items)}건</div>',
+           f'<div class="funnel">후보 {s["candidates"]}건 → 관련 {s["relevant"]}건 → 사건 {s["events"]}건 → 카드 {len(items)}건 · 목록 {len(listed)}건</div>',
            ]
     ov = rep.get("overview") or {}
     flows = ov.get("flows") or []
@@ -253,20 +283,25 @@ def report_body(rep, root=""):
         f'<div class="flow"><b>{E(f.get("title", ""))}</b>{E(f.get("text", ""))}<div class="refs">'
         + "".join(f'<a href="#i-{E(i)}">근거 {n + 1}</a>' for n, i in enumerate(f.get("ids", []))) + "</div></div>" for f in flows) \
         or '<p class="ops">오늘은 여러 시장을 가로지르는 뚜렷한 흐름이 없습니다.</p>'
-    out.append(f'<div class="hero">{map_block(items, root)}<div class="side"><div class="box"><h4>오늘의 3가지</h4><ol>'
+    out.append(f'<div class="hero">{map_block(allitems, root)}<div class="side"><div class="box"><h4>오늘의 3가지</h4><ol>'
                + "".join(f"<li>{E(t)}</li>" for t in ov.get("top3", []))
                + f'</ol></div><div class="box"><h4>흐름</h4>{flows_html}</div></div></div>')
     secs = [(k, v) for k, v in config.AREAS.items()] + [("novel", "처음 보는 것"), ("gaps", "범위·운영")]
     out.append('<nav class="sec">' + "".join(f'<a href="#s-{k}">{E(v)}</a>' for k, v in secs) + "</nav>")
-    out.append('<input id="q" class="filter" placeholder="오늘 리포트 안에서 검색 (국가, 회사, 태그…)">')
+    out.append('<input id="q" class="filter" placeholder="오늘 리포트 안에서 검색 — 카드와 더 많은 뉴스 목록 모두 (국가, 회사, 태그…)">')
     for key, label in config.AREAS.items():
         group = [it for it in items if it["area"] == key]
-        out.append(f'<section id="s-{key}" data-area="{key}"><h2>{E(label)} <span class="ops cnt">{len(group)}건</span></h2>'
-                   f'<p class="empty"{" style=display:none" if group else ""}>이 조건에 해당하는 기사가 없습니다.</p>')
+        more = sorted((x for x in listed if x["area"] == key), key=lambda x: (REGIONS.index(region_of(x)), -(x.get("score") or 0)))
+        out.append(f'<section id="s-{key}" data-area="{key}"><h2>{E(label)} <span class="ops cnt">총 {len(group) + len(more)}건 · 카드 {len(group)} · 목록 {len(more)}</span></h2>'
+                   f'<p class="empty"{" style=display:none" if group or more else ""}>이 조건에 해당하는 기사가 없습니다.</p>')
         out.append('<div class="grid">')
         group.sort(key=lambda it: REGIONS.index(region_of(it)))   # 권역 순으로 이어 붙여 행을 끊지 않는다
         out.append("".join(card(it, date) for it in group))
-        out.append("</div></section>")
+        out.append("</div>")
+        if more:
+            out.append(f'<div class="more"><h3>더 많은 뉴스 <span class="ops mcnt">{len(more)}건</span></h3>'
+                       f'<ul class="mlist">{"".join(row(x, date) for x in more)}</ul></div>')
+        out.append("</section>")
     novel = [it for it in items if it.get("novel")]
     out.append(f'<section id="s-novel"><h2>처음 보는 것 <span class="ops">{len(novel)}건</span></h2>'
                '<p class="ops">아카이브에 처음 등장한 제품·회사·소재·주제입니다. 위 분야별 목록에도 함께 실려 있습니다.</p>'
@@ -275,18 +310,13 @@ def report_body(rep, root=""):
                   or '<p class="ops">기준 기록이 쌓이는 중입니다.</p>') + "</section>")
     fails = [x for x in rep["sources"] if not x["ok"]]
     zero = [x for x in rep["sources"] if x["ok"] and x["n"] == 0]
-    out.append('<section id="s-gaps"><h2>범위·운영</h2><p class="ops">권역×분야별 게재 수. 0은 조사한 출처 범위 안에서 오늘 게재할 자료가 없었다는 뜻입니다.</p>'
-               + coverage_table(items))
+    out.append('<section id="s-gaps"><h2>범위·운영</h2><p class="ops">권역×분야별 사건 수(카드+목록). 0은 조사한 출처 범위 안에서 오늘 해당 자료가 없었다는 뜻입니다.</p>'
+               + coverage_table(allitems))
     out.append(f'<p class="ops">출처 {len(rep["sources"])}개 중 접근 실패 {len(fails)}개, 결과 0건 {len(zero)}개.</p>')
     if fails:
         out.append("<details><summary>접근 실패 출처</summary><ul class='ops'>" + "".join(f"<li>{E(x['source'])}: {E(x.get('error', ''))}</li>" for x in fails) + "</ul></details>")
     if zero:
         out.append("<details><summary>결과 0건 출처</summary><ul class='ops'>" + "".join(f"<li>{E(x['source'])}</li>" for x in zero) + "</ul></details>")
-    ns = rep.get("not_shown", [])
-    if ns:
-        out.append(f"<details><summary>관련 판정됐지만 상한 때문에 싣지 않은 사건 {len(ns)}건</summary><ul class='ops'>"
-                   + "".join(f'<li><a href="{E(x["url"])}" target="_blank" rel="noopener">{E(x.get("ko") or x["title"])}</a> ({E(x.get("story_country") or x.get("country") or "")})</li>' for x in ns)
-                   + "</ul></details>")
     held = rep.get("held", 0)
     out.append((f'<p class="ops">예산 상한으로 보류된 후보 {held}건은 다음 실행에서 처리합니다.</p>' if held else "") + "</section>")
     return "\n".join(out)
@@ -324,31 +354,56 @@ def build_site():
             "date": latest["date"], "generated_kst": latest["generated_kst"],
             "url": pages_base() + f"reports/{latest['date']}.html", "home": pages_base(),
             "top3": (latest.get("overview") or {}).get("top3", []),
-            "counts": {k: sum(1 for i in latest["items"] if i["area"] == k) for k in config.AREAS},
-            "regions": {r: sum(1 for i in latest["items"] if region_of(i) == r) for r in REGIONS},
-            "total": len(latest["items"]), "novel": sum(1 for i in latest["items"] if i.get("novel")),
+            "counts": {k: sum(1 for i in latest["items"] + latest.get("not_shown", []) if i.get("area") == k) for k in config.AREAS},
+            "regions": {r: sum(1 for i in latest["items"] + latest.get("not_shown", []) if region_of(i) == r) for r in REGIONS},
+            "total": len(latest["items"]) + len(latest.get("not_shown", [])), "cards": len(latest["items"]), "novel": sum(1 for i in latest["items"] if i.get("novel")),
             "usd": latest.get("usage", {}).get("total_usd"),
         }, ensure_ascii=False, indent=1))
     else:
         write("docs/index.html", page(TITLE, "<p>아직 리포트가 없습니다.</p>"))
 
-    # 아카이브 + 전체 검색 (경제 사이트와 같은 날짜 표기 + 그날 헤드라인)
-    index = [{"d": r["date"], "id": i["id"], "t": i["title_ko"], "b": i["brief"][:160], "c": country_of(i), "r": region_of(i),
-              "a": i["area"], "tg": i.get("tags") or []} for r in reps for i in r["items"]]
-    write("docs/search-index.json", json.dumps(index, ensure_ascii=False))
+    # 아카이브 + 전체 검색: 월별 색인(docs/search/YYYY-MM.json), 기간 선택해서 필요한 달만 불러온다
+    months = {}
+    for r in reps:
+        m = months.setdefault(r["date"][:7], [])
+        for i in r["items"]:
+            m.append({"d": r["date"], "id": i["id"], "k": "c", "t": i["title_ko"], "b": i["brief"][:160], "c": country_of(i),
+                      "r": region_of(i), "a": i["area"], "tg": i.get("tags") or []})
+        for i in r.get("not_shown", []):
+            if i.get("area") in config.AREAS:
+                m.append({"d": r["date"], "id": i["id"], "k": "l", "t": item_title(i), "c": country_of(i), "r": region_of(i),
+                          "a": i["area"], "tg": i.get("tags") or [], "u": i["url"], "p": i.get("publisher") or ""})
+    for mk, rows in months.items():
+        write(f"docs/search/{mk}.json", json.dumps(rows, ensure_ascii=False, separators=(",", ":")))
+    write("docs/search/months.json", json.dumps(sorted(months, reverse=True)))
     lst = "".join(f'<li><a href="reports/{r["date"]}.html"><span class="d">{E(date_label(r["date"], r.get("generated_kst")))}</span>'
-                  f'<span class="h">{E(headline(r))}</span></a><span class="ops">게재 {len(r["items"])}건</span></li>' for r in reps)
+                  f'<span class="h">{E(headline(r))}</span></a><span class="ops">카드 {len(r["items"])}건 · 목록 {len(r.get("not_shown", []))}건</span></li>' for r in reps)
     colors = json.dumps(config.REGION_COLORS, ensure_ascii=False)
     js = """<script>
-const RC=""" + colors + """;
-fetch('search-index.json').then(r=>r.json()).then(ix=>{const q=document.getElementById('aq'),o=document.getElementById('ares');
-const A={car:'자동차',mobility:'모빌리티',research:'리서치',event:'이벤트'};const esc=s=>String(s).replace(/</g,'&lt;');
-q.addEventListener('input',()=>{const v=q.value.trim().toLowerCase();if(v.length<2){o.innerHTML='';return}
-const hit=ix.filter(x=>(x.t+' '+x.b+' '+x.c+' '+x.r+' '+x.tg.join(' ')).toLowerCase().includes(v)).slice(0,200);
-o.innerHTML='<p class=ops>'+hit.length+'건</p>'+hit.map(x=>`<div class=card style="--rc:${RC[x.r]||'#4B515C'}"><h4><a href="reports/${x.d}.html#i-${x.id}">${esc(x.t)}</a></h4><div class=meta>${x.d} · ${esc(x.r)} · ${esc(x.c)} · ${A[x.a]||x.a}</div><p>${esc(x.b)}…</p></div>`).join('')})});
+const RC=""" + colors + """;const A={car:'자동차',mobility:'모빌리티',research:'리서치',event:'이벤트'};
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const q=document.getElementById('aq'),o=document.getElementById('ares'),rg=document.getElementById('range'),st=document.getElementById('rstat');
+const cache={};let MONTHS=[];
+fetch('search/months.json').then(r=>r.json()).then(m=>{MONTHS=m;run()});
+function pick(){const n=+rg.value;if(!n)return MONTHS;const [y,mo]=(MONTHS[0]||'2000-01').split('-').map(Number);
+ const base=y*12+mo-1;return MONTHS.filter(k=>{const [a,b]=k.split('-').map(Number);return base-(a*12+b-1)<n})}
+async function load(ms){await Promise.all(ms.filter(k=>!cache[k]).map(k=>fetch('search/'+k+'.json').then(r=>r.json()).then(d=>{cache[k]=d})));return ms.flatMap(k=>cache[k]||[])}
+let tok=0;async function run(){const my=++tok;const ms=pick();const ix=await load(ms);if(my!==tok)return;
+ st.textContent=ms.length+'개월 · '+ix.length.toLocaleString()+'건 색인';
+ const v=q.value.trim().toLowerCase();if(v.length<2){o.innerHTML='';return}
+ const hit=ix.filter(x=>(x.t+' '+(x.b||'')+' '+x.c+' '+x.r+' '+(x.p||'')+' '+x.tg.join(' ')).toLowerCase().includes(v));
+ const show=hit.slice(0,300);
+ o.innerHTML='<p class=ops>'+hit.length+'건'+(hit.length>300?' (앞 300건 표시)':'')+'</p>'+show.map(x=>x.k==='c'
+  ?`<div class=card style="--rc:${RC[x.r]||'#4B515C'}"><h4><a href="reports/${x.d}.html#i-${x.id}">${esc(x.t)}</a></h4><div class=meta><span class=kind>카드</span> ${x.d} · ${esc(x.r)} · ${esc(x.c)} · ${A[x.a]||x.a}</div><p>${esc(x.b)}…</p></div>`
+  :`<div class=card style="--rc:${RC[x.r]||'#4B515C'}"><h4><a href="${esc(x.u)}" target=_blank rel=noopener>${esc(x.t)}</a></h4><div class=meta><span class=kind>목록</span> ${x.d} · ${esc(x.r)} · ${esc(x.c)} · ${esc(x.p)} · ${A[x.a]||x.a} · <a href="reports/${x.d}.html#l-${x.id}">그날 리포트에서 보기</a></div></div>`).join('')}
+q.addEventListener('input',run);rg.addEventListener('change',run);
 </script>"""
-    write("docs/archive.html", page(f"{TITLE} — 아카이브", f'<h2>아카이브·검색</h2><input id="aq" class="filter" placeholder="전체 기간 검색 (2글자 이상: 국가, 권역, 회사, 태그…)"><div id="ares"></div>'
-                                   f'<h2>지난 리포트</h2><ul class="arch">{lst}</ul>{js}', script=False))
+    rng = ('<div class="rangebar"><label class="ops" for="range">기간</label><select id="range" class="chip">'
+           '<option value="1">이번 달</option><option value="3" selected>최근 3개월</option><option value="6">최근 6개월</option>'
+           '<option value="12">최근 1년</option><option value="36">최근 3년</option><option value="0">전체</option></select>'
+           '<span class="ops" id="rstat"></span></div>')
+    write("docs/archive.html", page(f"{TITLE} — 아카이브", f'<h2>아카이브·검색</h2>{rng}<input id="aq" class="filter" placeholder="검색어 (2글자 이상: 국가, 권역, 회사, 매체, 태그…) — 카드와 목록 모두">'
+                                   f'<div id="ares"></div><h2>지난 리포트</h2><ul class="arch">{lst}</ul>{js}', script=False))
 
     # 심층 대기 목록 (GitHub Issues, label=deep-dive)
     pend = []
