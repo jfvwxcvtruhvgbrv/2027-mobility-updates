@@ -78,10 +78,11 @@ section,.card{scroll-margin-top:60px}
 .rh{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;margin-bottom:2px}.rh .sw{background:var(--rc)}.rh .ops{font-weight:400}
 .mlist{list-style:none;padding:0;margin:4px 0 0;display:grid;grid-template-columns:1fr;column-gap:32px}
 @media(min-width:1100px){.mlist{grid-template-columns:1fr 1fr}}
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.45;scroll-margin-top:60px}
-.row .sw{background:var(--rc);transform:translateY(-1px)}.row .t{text-decoration:none;font-weight:500}.row .t:hover{text-decoration:underline}
-.row .rm{grid-column:1;font-size:12.5px;color:var(--ink-soft)}.row .dd{grid-column:2;grid-row:1/3;font-size:12px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;border:1px solid var(--rule);border-radius:5px;padding:0 6px}
+.row{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.5;scroll-margin-top:60px;min-width:0}
+.row .t{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;font-weight:500}.row .t:hover{text-decoration:underline}
+.row .rm{order:2;flex:0 1 auto;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;color:var(--ink-soft)}.row .dd{order:3;flex:none;font-size:12px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;border:1px solid var(--rule);border-radius:5px;padding:0 6px}
 .row .dd:hover{border-color:var(--ink);color:var(--ink)}
+@media(max-width:600px){.row{flex-wrap:wrap;row-gap:0}.row .t{flex-basis:100%;white-space:normal}.row .rm{max-width:none;flex:1}}
 .kind{font-size:11.5px;font-weight:700;border:1px solid var(--rule);border-radius:4px;padding:0 5px;color:var(--ink-soft)}
 .rangebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.funnel,.dateline{max-width:none}
 table.cov{border-collapse:collapse;font-size:13px;width:100%;background:var(--card)}table.cov td,table.cov th{border:1px solid var(--rule);padding:5px 8px;text-align:center}
@@ -169,11 +170,11 @@ def item_title(it):
 
 def row(it, date):
     reg = region_of(it)
-    meta = " · ".join(x for x in (country_of(it), it.get("publisher") or "", (it.get("published") or "")[:10]) if x)
+    meta = " · ".join(x for x in (country_of(it), it.get("publisher") or "", (it.get("published") or "")[5:10]) if x)
     return (f'<li class="row" id="l-{E(it["id"])}" data-region="{E(reg)}" style="--rc:{config.REGION_COLORS[reg]}">'
-            f'<a class="t" href="{E(it["url"])}" target="_blank" rel="noopener">{E(item_title(it))}</a>'
+            f'<a class="t" href="{E(it["url"])}" target="_blank" rel="noopener" title="{E(item_title(it))}">{E(item_title(it))}</a>'
             f'<a class="dd" href="{E(issue_link(it, date))}" target="_blank" rel="noopener" title="심층 대기에 추가">＋심층</a>'
-            f'<span class="rm">{E(meta)}</span></li>')
+            f'<span class="rm" title="{E(meta)}">{E(meta)}</span></li>')
 
 
 def issue_link(it, date):
