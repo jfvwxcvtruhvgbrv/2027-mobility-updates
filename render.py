@@ -26,17 +26,18 @@ CSS = """
 :root{--paper:#E9EBEA;--card:#F7F8F6;--ink:#12151C;--ink-soft:#4B515C;--rule:#C8CCC4;--accent:#2a5bd7}
 *{box-sizing:border-box}html{color-scheme:light}
 body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.7 Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
-a{color:var(--ink)}.wrap{max-width:1180px;margin:0 auto;padding:40px 28px 90px}
+a{color:var(--ink)}.wrap{padding:40px 5vw 90px}
 .brand{font-size:52px;font-weight:800;letter-spacing:-.01em;line-height:1.08;margin:0;text-transform:uppercase}
 .brand a{text-decoration:none}
 .topnav{display:flex;gap:18px;font-size:14px;margin:14px 0 0;flex-wrap:wrap}.topnav a{color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--rule)}
 .dateline{font-size:15px;color:var(--ink-soft);margin:22px 0 4px;font-weight:600}
 .funnel{font-size:13px;color:var(--ink-soft)}
-h2{font-size:22px;font-weight:800;margin:44px 0 12px;padding-top:14px;border-top:2px solid var(--ink);letter-spacing:-.01em}
+h2{font-size:23px;font-weight:800;margin:44px 0 12px;padding-top:14px;border-top:2px solid var(--ink);letter-spacing:-.01em}
 h3{font-size:14px;color:var(--ink-soft);margin:22px 0 8px;font-weight:700}
 .ops{font-size:13px;color:var(--ink-soft);font-weight:400}
 /* map */
-.mapcard{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 14px 10px;margin-top:20px}
+.hero{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;margin-top:20px;align-items:start}
+.mapcard{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 14px 10px}
 .map{position:relative;width:100%}.map img,.map svg{display:block;width:100%;height:auto}
 .map svg.overlay{position:absolute;inset:0}
 .bub{cursor:pointer}.bub circle{transition:opacity .15s}.bub text{font:700 15px Pretendard,sans-serif;fill:var(--ink);pointer-events:none}
@@ -49,34 +50,37 @@ body[data-sel] .bub:not(.on) circle{opacity:.3}
 .sw{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
 .selinfo{font-size:13px;color:var(--ink-soft);margin:8px 2px 0;min-height:20px}
 /* top */
-.lead{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.side{display:flex;flex-direction:column;gap:18px}
 .box{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px 18px}
-.box h4{margin:0 0 8px;font-size:15px;font-weight:800}.box ol{margin:0;padding-left:20px}
-.flow{margin:0 0 12px}.flow b{display:block}.flow .refs a{font-size:12px;margin-right:6px;color:var(--ink-soft)}
+.box h4{margin:0 0 10px;font-size:14px;font-weight:700;color:var(--ink-soft)}.box ol{margin:0;padding-left:22px;font-size:17.5px;font-weight:500;line-height:1.6}.box ol li{margin-bottom:8px}.box ol li:first-child{font-size:20px;font-weight:800}
+.flow{margin:0 0 16px;font-size:17.5px;font-weight:500;line-height:1.6}.flow b{display:block;font-size:24px;font-weight:800;line-height:1.3;margin-bottom:6px;letter-spacing:-.01em}.flow .refs a{font-size:12px;margin-right:6px;color:var(--ink-soft)}
 nav.sec{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);padding:8px 0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
 nav.sec a{font-size:13px;text-decoration:none;padding:3px 12px;border:1px solid var(--rule);border-radius:99px;background:var(--card)}
 section,.card{scroll-margin-top:60px}
 .filter{width:100%;padding:10px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink);font:15px Pretendard,sans-serif;margin:14px 0 4px}
 /* cards */
-.card{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--rc,#4B515C);border-radius:10px;padding:14px 18px;margin:10px 0}
-.card h4{margin:0 0 4px;font-size:17px;line-height:1.45;font-weight:700}
-.meta{font-size:12.5px;color:var(--ink-soft);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;align-items:stretch}
+.grid h3{grid-column:1/-1;margin:14px 0 0}
+.card{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--rc,#4B515C);border-radius:10px;padding:14px 16px;margin:0;display:flex;flex-direction:column;font-size:15.5px;line-height:1.6}
+.card h4{margin:0 0 6px;font-size:16.5px;line-height:1.45;font-weight:700}
+.meta{font-size:13px;color:var(--ink-soft);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .rchip{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--ink)}
 .tag{background:var(--paper);border-radius:4px;padding:0 7px;font-size:12px;color:var(--ink);cursor:pointer}
 .badge{border:1px solid var(--rule);border-radius:4px;padding:0 6px;font-size:11.5px;font-weight:700;color:var(--ink-soft)}
 .b-new{border-color:#b3261e;color:#b3261e}.b-exp{border-color:#6250d6;color:#6250d6}
-.card p{margin:8px 0}.why{font-size:14.5px;border-left:2px solid var(--rule);padding-left:10px}
-.links{font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px}.links a{color:var(--ink-soft)}
+.card p{margin:8px 0}.why{font-size:14.5px;color:var(--ink-soft);border-left:2px solid var(--rule);padding-left:10px}
+.links{font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:auto;padding-top:8px}.links a{color:var(--ink-soft)}
 .also{font-size:12.5px;color:var(--ink-soft);margin-top:4px}.also a{color:var(--ink-soft)}
 .pend{text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:2px 10px;color:var(--ink)!important;font-weight:600}
-.empty{font-size:13px;color:var(--ink-soft)}
+.empty{font-size:13px;color:var(--ink-soft)}.funnel,.dateline{max-width:none}
 table.cov{border-collapse:collapse;font-size:13px;width:100%;background:var(--card)}table.cov td,table.cov th{border:1px solid var(--rule);padding:5px 8px;text-align:center}
 table.cov td.zero{color:#b3261e;font-weight:700}table.cov th:first-child,table.cov td:first-child{text-align:left}
 details summary{cursor:pointer;font-size:13px;color:var(--ink-soft)}
 .arch{list-style:none;padding:0}.arch li{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:8px 0}
 .arch a{text-decoration:none}.arch .d{font-size:13px;color:var(--ink-soft);font-weight:600}.arch .h{font-weight:700;display:block}
 footer{margin-top:60px;font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:12px}
-@media(max-width:720px){.wrap{padding:24px 16px 70px}.brand{font-size:32px}.lead{grid-template-columns:1fr}
+@media(max-width:1100px){.hero{grid-template-columns:1fr}}
+@media(max-width:600px){.wrap{padding:24px 16px 70px}.brand{font-size:32px}.grid{grid-template-columns:1fr}
  nav.sec{flex-wrap:nowrap;overflow-x:auto}nav.sec a{white-space:nowrap}.bub .lab{display:none}}
 """
 
@@ -243,15 +247,16 @@ def report_body(rep, root=""):
     s = rep["stats"]
     out = [f'<div class="dateline">{E(date_label(date, rep.get("generated_kst")))}</div>'
            f'<div class="funnel">후보 {s["candidates"]}건 → 관련 {s["relevant"]}건 → 사건 {s["events"]}건 → 게재 {len(items)}건</div>',
-           map_block(items, root)]
+           ]
     ov = rep.get("overview") or {}
     flows = ov.get("flows") or []
     flows_html = "".join(
         f'<div class="flow"><b>{E(f.get("title", ""))}</b>{E(f.get("text", ""))}<div class="refs">'
         + "".join(f'<a href="#i-{E(i)}">근거 {n + 1}</a>' for n, i in enumerate(f.get("ids", []))) + "</div></div>" for f in flows) \
         or '<p class="ops">오늘은 여러 시장을 가로지르는 뚜렷한 흐름이 없습니다.</p>'
-    out.append(f'<div class="lead"><div class="box"><h4>오늘의 3가지</h4><ol>' + "".join(f"<li>{E(t)}</li>" for t in ov.get("top3", []))
-               + f'</ol></div><div class="box"><h4>흐름</h4>{flows_html}</div></div>')
+    out.append(f'<div class="hero">{map_block(items, root)}<div class="side"><div class="box"><h4>오늘의 3가지</h4><ol>'
+               + "".join(f"<li>{E(t)}</li>" for t in ov.get("top3", []))
+               + f'</ol></div><div class="box"><h4>흐름</h4>{flows_html}</div></div></div>')
     secs = [(k, v) for k, v in config.AREAS.items()] + [("novel", "처음 보는 것"), ("gaps", "범위·운영")]
     out.append('<nav class="sec">' + "".join(f'<a href="#s-{k}">{E(v)}</a>' for k, v in secs) + "</nav>")
     out.append('<input id="q" class="filter" placeholder="오늘 리포트 안에서 검색 (국가, 회사, 태그…)">')
@@ -259,11 +264,10 @@ def report_body(rep, root=""):
         group = [it for it in items if it["area"] == key]
         out.append(f'<section id="s-{key}" data-area="{key}"><h2>{E(label)} <span class="ops cnt">{len(group)}건</span></h2>'
                    f'<p class="empty"{" style=display:none" if group else ""}>이 조건에 해당하는 기사가 없습니다.</p>')
-        for region in REGIONS:
-            rg = [it for it in group if region_of(it) == region]
-            if rg:
-                out.append(f'<h3 data-region="{E(region)}">{E(region)}</h3>' + "".join(card(it, date) for it in rg))
-        out.append("</section>")
+        out.append('<div class="grid">')
+        group.sort(key=lambda it: REGIONS.index(region_of(it)))   # 권역 순으로 이어 붙여 행을 끊지 않는다
+        out.append("".join(card(it, date) for it in group))
+        out.append("</div></section>")
     novel = [it for it in items if it.get("novel")]
     out.append(f'<section id="s-novel"><h2>처음 보는 것 <span class="ops">{len(novel)}건</span></h2>'
                '<p class="ops">아카이브에 처음 등장한 제품·회사·소재·주제입니다. 위 분야별 목록에도 함께 실려 있습니다.</p>'
