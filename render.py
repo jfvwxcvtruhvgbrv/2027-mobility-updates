@@ -131,8 +131,7 @@ def page(title, body, root="", script=True):
     return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{E(title)}</title>{FONT}<style>{CSS}</style></head><body><div class="wrap">'
             f'<header><h1 class="brand"><a href="{root}index.html">{TITLE}</a></h1>{nav}</header>'
-            f'{body}<footer>모든 단신은 원문을 재구성한 요약이며 원문 링크를 함께 제공합니다. 투자 판단의 근거가 아닙니다. '
-            f'지도: Natural Earth(퍼블릭 도메인), Equal Earth 투영.</footer></div>{PAGE_JS if script else ""}</body></html>')
+            f'{body}</div>{PAGE_JS if script else ""}</body></html>')
 
 
 # ── 항목 정보 ────────────────────────────────────────────────────────────
@@ -289,9 +288,7 @@ def report_body(rep, root=""):
                    + "".join(f'<li><a href="{E(x["url"])}" target="_blank" rel="noopener">{E(x.get("ko") or x["title"])}</a> ({E(x.get("story_country") or x.get("country") or "")})</li>' for x in ns)
                    + "</ul></details>")
     held = rep.get("held", 0)
-    c = rep.get("usage", {})
-    out.append(f'<p class="ops">Claude 실측 비용 ${c.get("total_usd", 0):.4f} (실행 상한 ${c.get("budget_usd", 0)}) · 가격 기준일 {config.PRICES_CHECKED}'
-               + (f" · 예산 초과로 보류 {held}건" if held else "") + "</p></section>")
+    out.append((f'<p class="ops">예산 상한으로 보류된 후보 {held}건은 다음 실행에서 처리합니다.</p>' if held else "") + "</section>")
     return "\n".join(out)
 
 
