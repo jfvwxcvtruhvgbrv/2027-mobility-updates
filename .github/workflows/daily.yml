@@ -2,7 +2,9 @@ name: daily-report
 
 on:
   schedule:
-    - cron: "37 19 * * *"   # UTC 19:37 = KST 04:37 (Actions 지연 감안, 6시 전 완료 목표)
+    - cron: "37 19 * * *"   # KST 04:37 (기본)
+    - cron: "13 20 * * *"   # KST 05:13 (백업: 앞 실행이 누락·실패했을 때만 동작)
+    - cron: "47 21 * * *"   # KST 06:47 (2차 백업)
   workflow_dispatch:
     inputs:
       render_only:
@@ -46,6 +48,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_IF_EXISTS: ${{ github.event_name == 'schedule' && '1' || '' }}
         run: python -u run_pipeline.py
 
       - name: Refresh pending list only
