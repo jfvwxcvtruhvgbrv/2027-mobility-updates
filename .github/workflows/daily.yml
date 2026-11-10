@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "37 19 * * *"   # UTC 19:37 = KST 04:37 (Actions 지연 감안, 6시 전 완료 목표)
   workflow_dispatch:
+    inputs:
+      render_only:
+        description: "수집 없이 사이트만 다시 그리기"
+        type: boolean
+        default: false
   issues:
     types: [opened, closed, reopened, labeled, unlabeled]   # 심층 대기 목록만 다시 그린다
 
@@ -37,14 +42,14 @@ jobs:
           fi
 
       - name: Run pipeline
-        if: github.event_name != 'issues'
+        if: github.event_name != 'issues' && inputs.render_only != true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -u run_pipeline.py
 
       - name: Refresh pending list only
-        if: github.event_name == 'issues'
+        if: github.event_name == 'issues' || inputs.render_only == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -c "import render; render.fetch_pending(); render.build_site()"
