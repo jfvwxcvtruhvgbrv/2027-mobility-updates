@@ -1,34 +1,57 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>심층 대기 목록</title><style>
-:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--line:#e4e1da;--card:#fff;--acc:#2a5bd7;--new:#b3261e;--exp:#7a4dbf;--chip:#f1efe9}
-@media (prefers-color-scheme:dark){:root{--bg:#141413;--fg:#ecebe6;--mut:#a3a19a;--line:#2e2d2a;--card:#1c1c1a;--acc:#7ea2ff;--new:#ff8a80;--exp:#c3a6ff;--chip:#262522}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 "Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
-a{color:var(--acc)}.wrap{max-width:980px;margin:0 auto;padding:24px 20px 80px}
-header.top{border-bottom:2px solid var(--fg);padding-bottom:14px;margin-bottom:8px}
-header.top h1{font-size:28px;margin:0;letter-spacing:-.5px}header.top .sub{color:var(--mut);font-size:14px}
-nav.main{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;margin:10px 0 0}
-nav.sec{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 0;z-index:5;display:flex;gap:8px;flex-wrap:wrap}
-nav.sec{scrollbar-width:none}@media(max-width:640px){nav.sec{flex-wrap:nowrap;overflow-x:auto}nav.sec a{white-space:nowrap}}
-section,.card{scroll-margin-top:56px}
-nav.sec a{font-size:13px;text-decoration:none;padding:3px 10px;border:1px solid var(--line);border-radius:99px;color:var(--fg)}
-h2{font-size:22px;margin:36px 0 10px;border-top:1px solid var(--fg);padding-top:14px}h3{font-size:15px;color:var(--mut);margin:22px 0 8px;font-weight:600}
-.top3 ol{padding-left:20px;font-size:17px}.flow{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
-.flow b{display:block;margin-bottom:4px}.flow .refs a{font-size:12px;margin-right:6px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
-.card h4{margin:0 0 4px;font-size:17px;line-height:1.45}.meta{font-size:12.5px;color:var(--mut);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.chip{background:var(--chip);border-radius:4px;padding:0 6px;font-size:12px;color:var(--fg);cursor:pointer}
-.badge{border-radius:4px;padding:0 6px;font-size:11.5px;font-weight:700;border:1px solid currentColor}
-.b-new{color:var(--new)}.b-exp{color:var(--exp)}.b-basis{color:var(--mut)}
-.card p{margin:8px 0}.why{font-size:14.5px;border-left:3px solid var(--acc);padding-left:10px;color:var(--fg)}
-.links{font-size:13px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}.also{font-size:12.5px;color:var(--mut)}
-.pend{font-size:12.5px;text-decoration:none;border:1px solid var(--acc);border-radius:6px;padding:2px 10px}
-.filter{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font-size:15px;margin:14px 0 4px}
-table.cov{border-collapse:collapse;font-size:13px;width:100%}table.cov td,table.cov th{border:1px solid var(--line);padding:4px 8px;text-align:center}
-table.cov td.zero{color:var(--new);font-weight:700}table.cov th:first-child,table.cov td:first-child{text-align:left}
-.ops{font-size:13px;color:var(--mut)}details summary{cursor:pointer}footer{margin-top:50px;font-size:12.5px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
-.arch li{margin:6px 0}
-</style></head><body><div class="wrap"><header class="top"><h1>2027 Mobility Updates</h1><div class="sub">전 세계 자동차·모빌리티 소식, 매일 아침 한국어로</div><nav class="main"><a href="index.html">오늘의 리포트</a><a href="archive.html">아카이브·검색</a><a href="pending.html">심층 대기 목록</a></nav></header><h2>심층 대기 목록 <span class="ops">0건</span></h2><p class="ops">리포트의 "＋ 심층 대기에 추가"로 만든 GitHub 이슈 목록입니다(다음 실행 때 갱신). 이 목록은 수집 범위나 점수에 영향을 주지 않습니다. 심층 조사가 끝난 이슈를 닫으면 목록에서 빠집니다. <a href="https://github.com/jfvwxcvtruhvgbrv/2027-mobility-updates/issues?q=is%3Aopen+label%3Adeep-dive" target="_blank">GitHub에서 보기</a></p><p>대기 중인 항목이 없습니다.</p><footer>모든 단신은 원문을 재구성한 요약이며 원문 링크를 함께 제공합니다. 투자 판단의 근거가 아닙니다.</footer></div>
-<script>
-(function(){const q=document.getElementById('q');if(!q)return;const cards=[...document.querySelectorAll('.card')];
-function f(){const v=q.value.trim().toLowerCase();cards.forEach(c=>{c.style.display=!v||c.innerText.toLowerCase().includes(v)?'':'none'})}
-q.addEventListener('input',f);document.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{q.value=ch.textContent;f();q.scrollIntoView({behavior:'smooth'})}));})();
-</script></body></html>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>2027 MOBILITY UPDATES — 심층 대기 목록</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"><style>
+:root{--paper:#E9EBEA;--card:#F7F8F6;--ink:#12151C;--ink-soft:#4B515C;--rule:#C8CCC4;--accent:#2a5bd7}
+*{box-sizing:border-box}html{color-scheme:light}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.7 Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--ink)}.wrap{max-width:1180px;margin:0 auto;padding:40px 28px 90px}
+.brand{font-size:52px;font-weight:800;letter-spacing:-.01em;line-height:1.08;margin:0;text-transform:uppercase}
+.brand a{text-decoration:none}
+.topnav{display:flex;gap:18px;font-size:14px;margin:14px 0 0;flex-wrap:wrap}.topnav a{color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--rule)}
+.dateline{font-size:15px;color:var(--ink-soft);margin:22px 0 4px;font-weight:600}
+.funnel{font-size:13px;color:var(--ink-soft)}
+h2{font-size:22px;font-weight:800;margin:44px 0 12px;padding-top:14px;border-top:2px solid var(--ink);letter-spacing:-.01em}
+h3{font-size:14px;color:var(--ink-soft);margin:22px 0 8px;font-weight:700}
+.ops{font-size:13px;color:var(--ink-soft);font-weight:400}
+/* map */
+.mapcard{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 14px 10px;margin-top:20px}
+.map{position:relative;width:100%}.map img,.map svg{display:block;width:100%;height:auto}
+.map svg.overlay{position:absolute;inset:0}
+.bub{cursor:pointer}.bub circle{transition:opacity .15s}.bub text{font:700 15px Pretendard,sans-serif;fill:var(--ink);pointer-events:none}
+.bub .lab{font-size:13px;font-weight:600;fill:var(--ink-soft)}
+.bub:focus{outline:none}.bub:focus circle,.bub:hover circle{stroke:var(--ink);stroke-width:2.5}
+body[data-sel] .bub:not(.on) circle{opacity:.3}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 2px 2px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--card);border-radius:99px;padding:4px 12px;font:600 13px Pretendard,sans-serif;color:var(--ink);cursor:pointer}
+.chip.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.sw{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.selinfo{font-size:13px;color:var(--ink-soft);margin:8px 2px 0;min-height:20px}
+/* top */
+.lead{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.box{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px 18px}
+.box h4{margin:0 0 8px;font-size:15px;font-weight:800}.box ol{margin:0;padding-left:20px}
+.flow{margin:0 0 12px}.flow b{display:block}.flow .refs a{font-size:12px;margin-right:6px;color:var(--ink-soft)}
+nav.sec{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);padding:8px 0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
+nav.sec a{font-size:13px;text-decoration:none;padding:3px 12px;border:1px solid var(--rule);border-radius:99px;background:var(--card)}
+section,.card{scroll-margin-top:60px}
+.filter{width:100%;padding:10px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink);font:15px Pretendard,sans-serif;margin:14px 0 4px}
+/* cards */
+.card{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--rc,#4B515C);border-radius:10px;padding:14px 18px;margin:10px 0}
+.card h4{margin:0 0 4px;font-size:17px;line-height:1.45;font-weight:700}
+.meta{font-size:12.5px;color:var(--ink-soft);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rchip{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--ink)}
+.tag{background:var(--paper);border-radius:4px;padding:0 7px;font-size:12px;color:var(--ink);cursor:pointer}
+.badge{border:1px solid var(--rule);border-radius:4px;padding:0 6px;font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+.b-new{border-color:#b3261e;color:#b3261e}.b-exp{border-color:#6250d6;color:#6250d6}
+.card p{margin:8px 0}.why{font-size:14.5px;border-left:2px solid var(--rule);padding-left:10px}
+.links{font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px}.links a{color:var(--ink-soft)}
+.also{font-size:12.5px;color:var(--ink-soft);margin-top:4px}.also a{color:var(--ink-soft)}
+.pend{text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:2px 10px;color:var(--ink)!important;font-weight:600}
+.empty{font-size:13px;color:var(--ink-soft)}
+table.cov{border-collapse:collapse;font-size:13px;width:100%;background:var(--card)}table.cov td,table.cov th{border:1px solid var(--rule);padding:5px 8px;text-align:center}
+table.cov td.zero{color:#b3261e;font-weight:700}table.cov th:first-child,table.cov td:first-child{text-align:left}
+details summary{cursor:pointer;font-size:13px;color:var(--ink-soft)}
+.arch{list-style:none;padding:0}.arch li{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:8px 0}
+.arch a{text-decoration:none}.arch .d{font-size:13px;color:var(--ink-soft);font-weight:600}.arch .h{font-weight:700;display:block}
+footer{margin-top:60px;font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:12px}
+@media(max-width:720px){.wrap{padding:24px 16px 70px}.brand{font-size:32px}.lead{grid-template-columns:1fr}
+ nav.sec{flex-wrap:nowrap;overflow-x:auto}nav.sec a{white-space:nowrap}.bub .lab{display:none}}
+</style></head><body><div class="wrap"><header><h1 class="brand"><a href="index.html">2027 MOBILITY UPDATES</a></h1><nav class="topnav"><a href="index.html">오늘의 리포트</a><a href="archive.html">아카이브·검색</a><a href="pending.html">심층 대기 목록</a></nav></header><h2>심층 대기 목록 <span class="ops">0건</span></h2><p class="ops">리포트의 "＋ 심층 대기에 추가"로 만든 GitHub 이슈 목록입니다. 이 목록은 수집 범위나 점수에 영향을 주지 않습니다. 심층 조사가 끝난 이슈를 닫으면 목록에서 빠집니다. <a href="https://github.com/jfvwxcvtruhvgbrv/2027-mobility-updates/issues?q=is%3Aopen+label%3Adeep-dive" target="_blank">GitHub에서 보기</a></p><p class="ops">대기 중인 항목이 없습니다.</p><footer>모든 단신은 원문을 재구성한 요약이며 원문 링크를 함께 제공합니다. 투자 판단의 근거가 아닙니다. 지도: Natural Earth(퍼블릭 도메인), Equal Earth 투영.</footer></div></body></html>
