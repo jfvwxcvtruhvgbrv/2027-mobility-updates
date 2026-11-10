@@ -74,10 +74,13 @@ section,.card{scroll-margin-top:60px}
 .pend{text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:2px 10px;color:var(--ink)!important;font-weight:600}
 .empty{font-size:13px;color:var(--ink-soft)}
 .more h3{font-size:15px;color:var(--ink);margin:26px 0 4px}
-.mlist{list-style:none;padding:0;margin:6px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));column-gap:24px}
-.row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;column-gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.45;scroll-margin-top:60px}
+.rbox{background:var(--card);border:1px solid var(--rule);border-top:4px solid var(--rc);border-radius:10px;padding:12px 18px 6px;margin:12px 0}
+.rh{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;margin-bottom:2px}.rh .sw{background:var(--rc)}.rh .ops{font-weight:400}
+.mlist{list-style:none;padding:0;margin:4px 0 0;display:grid;grid-template-columns:1fr;column-gap:32px}
+@media(min-width:1100px){.mlist{grid-template-columns:1fr 1fr}}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.45;scroll-margin-top:60px}
 .row .sw{background:var(--rc);transform:translateY(-1px)}.row .t{text-decoration:none;font-weight:500}.row .t:hover{text-decoration:underline}
-.row .rm{grid-column:2;font-size:12.5px;color:var(--ink-soft)}.row .dd{grid-column:3;grid-row:1/3;font-size:12px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;border:1px solid var(--rule);border-radius:5px;padding:0 6px}
+.row .rm{grid-column:1;font-size:12.5px;color:var(--ink-soft)}.row .dd{grid-column:2;grid-row:1/3;font-size:12px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;border:1px solid var(--rule);border-radius:5px;padding:0 6px}
 .row .dd:hover{border-color:var(--ink);color:var(--ink)}
 .kind{font-size:11.5px;font-weight:700;border:1px solid var(--rule);border-radius:4px;padding:0 5px;color:var(--ink-soft)}
 .rangebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.funnel,.dateline{max-width:none}
@@ -102,6 +105,7 @@ function apply(){const v=q?q.value.trim().toLowerCase():'';let n=0;
   const a=vis('.card'),b=vis('.row');const cnt=s.querySelector('.cnt');if(cnt)cnt.textContent='총 '+(a+b)+'건 · 카드 '+a+' · 목록 '+b;
   const mh=s.querySelector('.more');if(mh)mh.style.display=b?'':'none';const mc=s.querySelector('.mcnt');if(mc)mc.textContent=b+'건';
   const em=s.querySelector('.empty');if(em)em.style.display=(a+b)?'none':''});
+ document.querySelectorAll('.rbox').forEach(bx=>{const k=[...bx.querySelectorAll('.row')].filter(r=>r.style.display!=='none').length;bx.style.display=k?'':'none';const rn=bx.querySelector('.rn');if(rn)rn.textContent=k});
  document.querySelectorAll('h3[data-region]').forEach(h=>{let el=h.nextElementSibling,k=0;while(el&&el.classList.contains('card')){if(el.style.display!=='none')k++;el=el.nextElementSibling}h.style.display=k?'':'none'});
  const info=document.getElementById('selinfo');if(info)info.innerHTML=sel?('선택: <b>'+sel+'</b> '+n+'건 · <a href="#" id="clr">전체 보기</a>'):'지도의 원이나 아래 권역을 누르면 해당 지역 기사만 봅니다.';
  const clr=document.getElementById('clr');if(clr)clr.onclick=e=>{e.preventDefault();pick(null)};
@@ -167,9 +171,9 @@ def row(it, date):
     reg = region_of(it)
     meta = " · ".join(x for x in (country_of(it), it.get("publisher") or "", (it.get("published") or "")[:10]) if x)
     return (f'<li class="row" id="l-{E(it["id"])}" data-region="{E(reg)}" style="--rc:{config.REGION_COLORS[reg]}">'
-            f'<span class="sw"></span><a class="t" href="{E(it["url"])}" target="_blank" rel="noopener">{E(item_title(it))}</a>'
+            f'<a class="t" href="{E(it["url"])}" target="_blank" rel="noopener">{E(item_title(it))}</a>'
             f'<a class="dd" href="{E(issue_link(it, date))}" target="_blank" rel="noopener" title="심층 대기에 추가">＋심층</a>'
-            f'<span class="rm">{E(reg)} · {E(meta)}</span></li>')
+            f'<span class="rm">{E(meta)}</span></li>')
 
 
 def issue_link(it, date):
@@ -299,8 +303,14 @@ def report_body(rep, root=""):
         out.append("".join(card(it, date) for it in group))
         out.append("</div>")
         if more:
-            out.append(f'<div class="more"><h3>더 많은 뉴스 <span class="ops mcnt">{len(more)}건</span></h3>'
-                       f'<ul class="mlist">{"".join(row(x, date) for x in more)}</ul></div>')
+            boxes = []
+            for reg in REGIONS:
+                rr = [x for x in more if region_of(x) == reg]
+                if rr:
+                    boxes.append(f'<div class="rbox" style="--rc:{config.REGION_COLORS[reg]}"><div class="rh"><span class="sw"></span>{E(reg)}'
+                                 f' <span class="ops">· <span class="rn">{len(rr)}</span>건</span></div>'
+                                 f'<ul class="mlist">{"".join(row(x, date) for x in rr)}</ul></div>')
+            out.append(f'<div class="more"><h3>더 많은 뉴스 <span class="ops mcnt">{len(more)}건</span></h3>{"".join(boxes)}</div>')
         out.append("</section>")
     novel = [it for it in items if it.get("novel")]
     out.append(f'<section id="s-novel"><h2>처음 보는 것 <span class="ops">{len(novel)}건</span></h2>'
