@@ -206,12 +206,19 @@ def overview(llm, briefs):
     lines = [{"id": b["id"], "area": b["area"], "country": b.get("story_country") or b["country"], "title": b["title_ko"], "brief": b["brief"][:220]}
              for b in briefs]
     model = config.MID_MODEL if config.USE_MID_MODEL_FOR_OVERVIEW else config.CHEAP_MODEL
-    try:
-        return llm.json_call(model=model, system=OVERVIEW_SYSTEM, user=json.dumps(lines, ensure_ascii=False),
-                             max_tokens=3000, stage="overview", schema=OVERVIEW_SCHEMA)
-    except Exception as e:  # noqa: BLE001
-        print(f"[WARN] overview: {e}")
-        return {"top3": [b["title_ko"] for b in briefs[:3]], "flows": []}
+    user = json.dumps(lines, ensure_ascii=False)
+    res = None
+    for m in dict.fromkeys([model, config.CHEAP_MODEL]):
+        try:
+            res = llm.json_call(model=m, system=OVERVIEW_SYSTEM, user=user,
+                                max_tokens=8000, stage="overview", schema=OVERVIEW_SCHEMA)
+        except Exception as e:  # noqa: BLE001
+            print(f"[WARN] overview({m}): {e}")
+            continue
+        if res.get("top3") and res.get("flows"):
+            return res
+        print(f"[WARN] overview({m}): 흐름 누락, 다음 모델로 재시도")
+    return {"top3": (res or {}).get("top3") or [b["title_ko"] for b in briefs[:3]], "flows": (res or {}).get("flows") or []}
 
 
 def load_entities(path="data/entities.json"):
