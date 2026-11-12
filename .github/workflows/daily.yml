@@ -2,9 +2,9 @@ name: daily-report
 
 on:
   schedule:
-    - cron: "37 19 * * *"   # KST 04:37 (기본)
-    - cron: "13 20 * * *"   # KST 05:13 (백업: 앞 실행이 누락·실패했을 때만 동작)
-    - cron: "47 21 * * *"   # KST 06:47 (2차 백업)
+    - cron: "23 18 * * *"   # KST 03:23 (기본)
+    - cron: "7 19 * * *"    # KST 04:07 (백업: 앞 실행이 누락·실패했을 때만 동작)
+    - cron: "13 20 * * *"   # KST 05:13 (2차 백업)
   workflow_dispatch:
     inputs:
       render_only:
