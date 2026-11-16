@@ -52,7 +52,7 @@ body[data-sel] .bub:not(.on) circle{opacity:.3}
 .side{display:flex;flex-direction:column;gap:18px}
 .box{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px 18px}
 .box h4{margin:0 0 10px;font-size:14px;font-weight:700;color:var(--ink-soft)}.box ol{margin:0;padding-left:22px;font-size:17.5px;font-weight:500;line-height:1.6}.box ol li{margin-bottom:8px}.box ol li:first-child{font-size:20px;font-weight:800}
-.flow{margin:0 0 16px;font-size:17.5px;font-weight:500;line-height:1.6}.flow b{display:block;font-size:24px;font-weight:800;line-height:1.3;margin-bottom:6px;letter-spacing:-.01em}.flow .refs a{font-size:12px;margin-right:6px;color:var(--ink-soft)}
+.flow{margin:0 0 16px;font-size:17.5px;font-weight:500;line-height:1.6}.flow b{display:block;font-size:24px;font-weight:800;line-height:1.3;margin-bottom:6px;letter-spacing:-.01em}.flow .refs a{font-size:12px;margin-right:10px;color:var(--ink-soft);text-decoration:underline}.flow .refs a.rc{margin-left:-6px;font-size:11px;opacity:.75}
 nav.sec{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);padding:8px 0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
 nav.sec a{font-size:13px;text-decoration:none;padding:3px 12px;border:1px solid var(--rule);border-radius:99px;background:var(--card)}
 section,.card{scroll-margin-top:60px}
@@ -269,9 +269,30 @@ def report_body(rep, root=""):
            ]
     ov = rep.get("overview") or {}
     flows = ov.get("flows") or []
+    byid = {x["id"]: x for x in allitems if x.get("id")}
+
+    def refs(ids):
+        seen, out_ = set(), []
+        for i in ids or []:
+            it = byid.get(i)
+            if not it or i in seen:
+                continue
+            seen.add(i)
+            name = E((it.get("publisher") or "원문")[:18])
+            u = it.get("resolved_url") or it.get("url") or ""
+            tip = E(it.get("title_ko") or it.get("ko") or it.get("title") or "")
+            if u.startswith("http"):
+                a = f'<a href="{E(u)}" target="_blank" rel="noopener" title="{tip}">{name}</a>'
+                if "news.google.com" in u and it in items:
+                    a += f'<a class="rc" href="#i-{E(i)}" title="한국어 단신 보기">↓카드</a>'
+            else:
+                a = f'<a href="#i-{E(i)}" title="{tip}">{name}</a>'
+            out_.append(a)
+        return "".join(out_)
+
     flows_html = "".join(
-        f'<div class="flow"><b>{E(f.get("title", ""))}</b>{E(f.get("text", ""))}<div class="refs">'
-        + "".join(f'<a href="#i-{E(i)}">근거 {n + 1}</a>' for n, i in enumerate(f.get("ids", []))) + "</div></div>" for f in flows) \
+        f'<div class="flow"><b>{E(f.get("title", ""))}</b>{E(f.get("text", ""))}<div class="refs">{refs(f.get("ids"))}</div></div>'
+        for f in flows) \
         or '<p class="ops">오늘은 여러 시장을 가로지르는 뚜렷한 흐름이 없습니다.</p>'
     out.append(f'<div class="hero">{map_block(allitems, root)}<div class="side"><div class="box"><h4>오늘의 3가지</h4><ol>'
                + "".join(f"<li>{E(t)}</li>" for t in ov.get("top3", []))
